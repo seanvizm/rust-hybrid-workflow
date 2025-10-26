@@ -63,9 +63,6 @@ test_single_workflow() {
     cat > src/main_temp.rs << EOF
 mod core;
 mod runners;
-mod components;
-mod pages;
-mod utils;
 
 use core::run_workflow;
 

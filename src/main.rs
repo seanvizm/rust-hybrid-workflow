@@ -1,8 +1,5 @@
 mod core;
 mod runners;
-mod components;
-mod pages;
-mod utils;
 
 use core::run_workflow;
 use std::env;
