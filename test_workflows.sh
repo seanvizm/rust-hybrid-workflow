@@ -217,10 +217,13 @@ workflow = {
   description = "Simple single step test",
   steps = {
     hello = {
-      run = function()
-        print("Hello from Lua!")
-        return { message = "Hello World" }
-      end
+      language = "lua",
+      code = [[
+function run()
+    print("Hello from Lua!")
+    return { message = "Hello World" }
+end
+]]
     }
   }
 }'
@@ -267,9 +270,12 @@ workflow = {
   description = "Mixed Lua and Python workflow",
   steps = {
     lua_step = {
-      run = function()
-        return { from_lua = "Hello from Lua" }
-      end
+      language = "lua",
+      code = [[
+function run()
+    return { from_lua = "Hello from Lua" }
+end
+]]
     },
     python_step = {
       depends_on = {"lua_step"},
@@ -341,9 +347,12 @@ workflow = {
   description = "Multi-language workflow test",
   steps = {
     lua_init = {
-      run = function()
-        return { initial_value = 5, source = "lua" }
-      end
+      language = "lua",
+      code = [[
+function run()
+    return { initial_value = 5, source = "lua" }
+end
+]]
     },
     python_process = {
       depends_on = {"lua_init"},

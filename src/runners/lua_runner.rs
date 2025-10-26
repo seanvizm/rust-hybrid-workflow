@@ -1,23 +1,23 @@
-use mlua::{Lua, Value, Table};
+use mlua::{Lua, Value};
 use std::collections::HashMap;
 
 pub fn run_lua_step(
-    name: &str,
-    lua: &Lua,
-    workflow_table: &Table,
+    _name: &str,
+    code: &str,
     inputs: &HashMap<String, serde_json::Value>,
 ) -> anyhow::Result<serde_json::Value> {
-    // Get the steps table
-    let steps: Table = workflow_table.get("steps")?;
-    let step: Table = steps.get(name)?;
+    let lua = Lua::new();
     
-    // Get the run function
-    let run_func: mlua::Function = step.get("run")?;
+    // Execute the Lua code
+    lua.load(code).exec()?;
+    
+    // Get the run function from the executed code
+    let run_func: mlua::Function = lua.globals().get("run")?;
     
     // Convert inputs to Lua table
     let inputs_table = lua.create_table()?;
     for (key, value) in inputs {
-        let lua_value = json_to_lua(lua, value)?;
+        let lua_value = json_to_lua(&lua, value)?;
         inputs_table.set(key.as_str(), lua_value)?;
     }
     
@@ -128,6 +128,7 @@ mod tests {
     use mlua::Lua;
     use std::collections::HashMap;
 
+    #[allow(dead_code)]
     fn create_test_lua_context() -> Lua {
         let lua = Lua::new();
         let workflow_script = r#"
@@ -159,11 +160,14 @@ workflow = {
 
     #[test]
     fn test_run_lua_step_no_inputs() {
-        let lua = create_test_lua_context();
-        let workflow_table: Table = lua.globals().get("workflow").unwrap();
         let inputs = HashMap::new();
+        let code = r#"
+function run()
+    return { result = "success", value = 42 }
+end
+"#;
         
-        let result = run_lua_step("simple_step", &lua, &workflow_table, &inputs);
+        let result = run_lua_step("simple_step", code, &inputs);
         
         assert!(result.is_ok());
         let output = result.unwrap();
@@ -173,13 +177,21 @@ workflow = {
 
     #[test]
     fn test_run_lua_step_with_inputs() {
-        let lua = create_test_lua_context();
-        let workflow_table: Table = lua.globals().get("workflow").unwrap();
         let mut inputs = HashMap::new();
         let input_data = serde_json::json!({"data": [1, 2, 3]});
         inputs.insert("test_input".to_string(), input_data);
+        let code = r#"
+function run(inputs)
+    local data = inputs.test_input.data
+    local doubled = {}
+    for i, v in ipairs(data) do
+        doubled[i] = v * 2
+    end
+    return { doubled = doubled }
+end
+"#;
         
-        let result = run_lua_step("input_step", &lua, &workflow_table, &inputs);
+        let result = run_lua_step("input_step", code, &inputs);
         
         assert!(result.is_ok());
         let output = result.unwrap();
@@ -190,12 +202,14 @@ workflow = {
     }
 
     #[test]
-    fn test_run_lua_step_nonexistent_step() {
-        let lua = create_test_lua_context();
-        let workflow_table: Table = lua.globals().get("workflow").unwrap();
+    fn test_run_lua_step_no_run_function() {
         let inputs = HashMap::new();
+        let code = r#"
+-- This code has no run function, should fail
+local x = 42
+"#;
         
-        let result = run_lua_step("nonexistent_step", &lua, &workflow_table, &inputs);
+        let result = run_lua_step("nonexistent_step", code, &inputs);
         
         assert!(result.is_err());
     }

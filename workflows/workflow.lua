@@ -6,31 +6,40 @@ workflow = {
 
   steps = {
     fetch_data = {
-      run = function()
-        print("Fetching data...")
-        return { data = {1, 2, 3, 4, 5} }
-      end
+      language = "lua",
+      code = [[
+function run()
+    print("Fetching data...")
+    return { data = {1, 2, 3, 4, 5} }
+end
+]]
     },
 
     process_data = {
       depends_on = { "fetch_data" },
-      run = function(inputs)
-        local raw = inputs["fetch_data"].data
-        local processed = {}
-        for i, v in ipairs(raw) do
-          processed[i] = v * 2
-        end
-        return { processed = processed }
-      end
+      language = "lua",
+      code = [[
+function run(inputs)
+    local raw = inputs["fetch_data"].data
+    local processed = {}
+    for i, v in ipairs(raw) do
+        processed[i] = v * 2
+    end
+    return { processed = processed }
+end
+]]
     },
 
     store_data = {
       depends_on = { "process_data" },
-      run = function(inputs)
-        local final = inputs["process_data"].processed
-        print("Storing data:", table.concat(final, ", "))
-        return { status = "success" }
-      end
+      language = "lua",
+      code = [[
+function run(inputs)
+    local final = inputs["process_data"].processed
+        print("Storing " .. #final .. " items...")
+    return { success = true }
+end
+]]
     }
   }
 }

@@ -23,9 +23,33 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Function to resolve workflow path
+resolve_workflow_path() {
+    local path=$1
+    
+    # If path already starts with workflows/, use as-is
+    if [[ "$path" == workflows/* ]]; then
+        echo "$path"
+        return
+    fi
+    
+    # If it's just a filename, prepend workflows/
+    if [[ "$path" != */* ]]; then
+        local workflow_path="workflows/$path"
+        if [ -f "$workflow_path" ]; then
+            echo "$workflow_path"
+            return
+        fi
+    fi
+    
+    # Return original path
+    echo "$path"
+}
+
 # Function to test a workflow
 test_single_workflow() {
-    local workflow_file=$1
+    local workflow_input=$1
+    local workflow_file=$(resolve_workflow_path "$workflow_input")
     local test_name=${2:-$(basename "$workflow_file")}
     
     print_msg "Testing: $test_name"
@@ -37,15 +61,18 @@ test_single_workflow() {
     
     # Create temporary main.rs
     cat > src/main_temp.rs << EOF
-mod engine;
-mod lua_loader;
-mod lua_runner;
-mod python_runner;
+mod core;
+mod runners;
+mod components;
+mod pages;
+mod utils;
+
+use core::run_workflow;
 
 fn main() -> anyhow::Result<()> {
     println!("Testing workflow: $workflow_file");
     println!("=================================");
-    engine::run_workflow("$workflow_file")?;
+    run_workflow("$workflow_file")?;
     Ok(())
 }
 EOF

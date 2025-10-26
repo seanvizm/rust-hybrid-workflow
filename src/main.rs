@@ -13,10 +13,10 @@ fn main() -> anyhow::Result<()> {
     
     if args.len() > 1 {
         // User provided a workflow file argument
-        let workflow_path = &args[1];
-        let full_path = resolve_workflow_path(workflow_path);
+        let workflow_filename = &args[1];
+        let full_path = resolve_workflow_path(workflow_filename);
         
-        println!("=== Running workflow: {} ===", full_path);
+        println!("=== Running workflow: {} ===", workflow_filename);
         run_workflow(&full_path)?;
     } else {
         // Default behavior: run all demo workflows
@@ -40,6 +40,9 @@ fn main() -> anyhow::Result<()> {
         
         println!("\n=== Running JavaScript integration workflow (Python + JavaScript + Shell) ===");
         run_workflow("workflows/js_python_shell_workflow.lua")?;
+        
+        println!("\n=== Running WebAssembly workflow (Python + WASM + JavaScript) ===");
+        run_workflow("workflows/wasm_workflow.lua")?;
     }
     
     Ok(())
@@ -103,16 +106,19 @@ mod tests {
 
     #[test]
     fn test_create_and_run_simple_lua_workflow() {
-        // Create a temporary simple workflow
+        // Create a temporary simple workflow using new format
         let test_workflow_content = r#"
 workflow = {
   name = "test_simple",
   description = "Simple test workflow",
   steps = {
     test_step = {
-      run = function()
-        return { result = "test_passed", value = 42 }
-      end
+      language = "lua",
+      code = [[
+function run()
+    return { result = "test_passed", value = 42 }
+end
+]]
     }
   }
 }
@@ -126,6 +132,9 @@ workflow = {
         // Cleanup
         let _ = fs::remove_file(test_file);
         
+        if let Err(e) = &result {
+            eprintln!("Simple Lua workflow failed with error: {:?}", e);
+        }
         assert!(result.is_ok(), "Simple Lua workflow should execute successfully");
     }
 
@@ -221,16 +230,19 @@ workflow = {
 
     #[test]
     fn test_mixed_lua_python_workflow() {
-        // Create a mixed Lua and Python workflow
+        // Create a mixed Lua and Python workflow using new format
         let mixed_workflow_content = r#"
 workflow = {
   name = "test_mixed",
   description = "Mixed Lua and Python workflow",
   steps = {
     lua_step = {
-      run = function()
-        return { message = "Hello from Lua", number = 42 }
-      end
+      language = "lua",
+      code = [[
+function run()
+    return { message = "Hello from Lua", number = 42 }
+end
+]]
     },
     python_step = {
       depends_on = {"lua_step"},
@@ -254,6 +266,9 @@ def run(inputs):
         // Cleanup
         let _ = fs::remove_file(test_file);
         
+        if let Err(e) = &result {
+            eprintln!("Mixed Lua-Python workflow failed with error: {:?}", e);
+        }
         assert!(result.is_ok(), "Mixed Lua-Python workflow should execute successfully");
     }
 }

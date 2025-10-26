@@ -148,7 +148,7 @@ end
       code = [[
 #!/bin/bash
 
-function run() {
+run() {
     echo "Generating system reports with Shell..."
     
     # Parse input data (simplified for demo)
@@ -204,7 +204,21 @@ def run(inputs):
     original_data = inputs["fetch_api_data"]
     js_analytics = inputs["analyze_with_js"]["analytics"]
     lua_business = inputs["apply_business_rules"]
-    shell_reports = inputs["generate_reports"]
+    shell_reports_raw = inputs["generate_reports"]
+    
+    # Parse shell script JSON output from stdout
+    import json
+    import re
+    
+    # Extract JSON from shell output (shell script mixes text with JSON)
+    stdout_text = shell_reports_raw["stdout"]
+    # Find JSON portion (starts with { and ends with })
+    json_match = re.search(r'\{.*\}', stdout_text, re.DOTALL)
+    if json_match:
+        shell_reports = json.loads(json_match.group(0))
+    else:
+        # Fallback if no JSON found
+        shell_reports = {"report_info": {"report_id": "UNKNOWN", "generated_at": "UNKNOWN"}, "system_info": {"hostname": "UNKNOWN"}}
     
     # Create comprehensive summary
     summary = {

@@ -1,6 +1,5 @@
 use crate::core::lua_loader::{load_workflow, Step};
-use crate::runners::{run_lua_step, run_python_step, run_shell_step, run_javascript_step};
-use mlua::Lua;
+use crate::runners::{run_lua_step, run_python_step, run_shell_step, run_javascript_step, run_wasm_step};
 use std::collections::{HashMap, HashSet};
 
 pub fn run_workflow(path: &str) -> anyhow::Result<()> {
@@ -10,15 +9,7 @@ pub fn run_workflow(path: &str) -> anyhow::Result<()> {
     // Sort steps by dependencies (topological sort)
     steps = sort_steps_by_dependencies(steps)?;
 
-    // Initialize Lua context for Lua steps
-    let lua = Lua::new();
-    let workflow_table = if steps.iter().any(|s| s.language == "lua") {
-        let script = std::fs::read_to_string(path)?;
-        lua.load(&script).exec()?;
-        Some(lua.globals().get("workflow")?)
-    } else {
-        None
-    };
+    // No longer need to initialize Lua context here since each step handles its own code
 
     for (step_index, step) in steps.iter().enumerate() {
         let step_number = step_index + 1;
@@ -31,15 +22,14 @@ pub fn run_workflow(path: &str) -> anyhow::Result<()> {
 
         let output = match step.language.as_str() {
             "python" => run_python_step(&step.name, &step.code, &inputs)?,
-            "lua" => {
-                if let Some(ref workflow) = workflow_table {
-                    run_lua_step(&step.name, &lua, workflow, &inputs)?
-                } else {
-                    return Err(anyhow::anyhow!("Lua workflow context not available"));
-                }
-            }
+            "lua" => run_lua_step(&step.name, &step.code, &inputs)?,
             "bash" | "shell" | "sh" => run_shell_step(&step.name, &step.code, &inputs)?,
             "javascript" | "js" | "node" | "nodejs" => run_javascript_step(&step.name, &step.code, &inputs)?,
+            "wasm" | "webassembly" => {
+                let module_path = step.module_path.as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("WASM step '{}' missing 'module' field", step.name))?;
+                run_wasm_step(&step.name, module_path, step.function_name.as_deref(), &inputs)?
+            }
             _ => return Err(anyhow::anyhow!("Unsupported language: {}", step.language)),
         };
 
@@ -97,12 +87,16 @@ mod tests {
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec![],
+                module_path: None,
+                function_name: None,
             },
             Step {
                 name: "step2".to_string(),
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec![],
+                module_path: None,
+                function_name: None,
             },
         ];
 
@@ -120,12 +114,16 @@ mod tests {
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec!["step1".to_string()],
+                module_path: None,
+                function_name: None,
             },
             Step {
                 name: "step1".to_string(),
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec![],
+                module_path: None,
+                function_name: None,
             },
         ];
 
@@ -145,12 +143,16 @@ mod tests {
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec!["step2".to_string()],
+                module_path: None,
+                function_name: None,
             },
             Step {
                 name: "step2".to_string(),
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec!["step1".to_string()],
+                module_path: None,
+                function_name: None,
             },
         ];
 
@@ -166,18 +168,24 @@ mod tests {
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec!["step1".to_string(), "step2".to_string()],
+                module_path: None,
+                function_name: None,
             },
             Step {
                 name: "step1".to_string(),
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec![],
+                module_path: None,
+                function_name: None,
             },
             Step {
                 name: "step2".to_string(),
                 language: "lua".to_string(),
                 code: "".to_string(),
                 depends_on: vec!["step1".to_string()],
+                module_path: None,
+                function_name: None,
             },
         ];
 
@@ -192,16 +200,19 @@ mod tests {
 
     #[test]
     fn test_run_workflow_integration() {
-        // Create a simple test workflow file
+        // Create a simple test workflow file using new format
         let test_workflow = r#"
 workflow = {
   name = "integration_test",
   description = "Integration test workflow",
   steps = {
     test_step = {
-      run = function()
-        return { status = "completed", test = true }
-      end
+      language = "lua",
+      code = [[
+function run()
+    return { status = "completed", test = true }
+end
+]]
     }
   }
 }
@@ -214,6 +225,9 @@ workflow = {
         // Cleanup
         let _ = fs::remove_file(test_file);
 
+        if let Err(e) = &result {
+            eprintln!("Integration test workflow failed with error: {:?}", e);
+        }
         assert!(result.is_ok(), "Integration test workflow should run successfully");
     }
 
@@ -249,16 +263,19 @@ run() {
 
     #[test]
     fn test_multi_language_workflow() {
-        // Test workflow with Lua, Python, and Shell steps
+        // Test workflow with Lua, Python, and Shell steps using new format
         let test_workflow = r#"
 workflow = {
   name = "multi_lang_test",
   description = "Multi-language test workflow",
   steps = {
     lua_step = {
-      run = function()
-        return { from_lua = "test_value" }
-      end
+      language = "lua",
+      code = [[
+function run()
+    return { from_lua = "test_value" }
+end
+]]
     },
     python_step = {
       depends_on = {"lua_step"},
@@ -288,6 +305,9 @@ run() {
         // Cleanup
         let _ = fs::remove_file(test_file);
 
+        if let Err(e) = &result {
+            eprintln!("Multi-language integration test failed with error: {:?}", e);
+        }
         assert!(result.is_ok(), "Multi-language integration test should run successfully");
     }
 }

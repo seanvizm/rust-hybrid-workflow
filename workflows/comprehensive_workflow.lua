@@ -8,20 +8,23 @@ workflow = {
   steps = {
     -- Step 1: Initialize configuration with Lua
     lua_config = {
-      run = function()
-        print("Step 1: Initializing configuration with Lua...")
-        return {
-          config = {
+      language = "lua",
+      code = [[
+function run()
+    print("Step 1: Initializing configuration with Lua...")
+    return {
+        config = {
             batch_size = 100,
             output_format = "json",
             enable_logging = true
-          },
-          metadata = {
+        },
+        metadata = {
             created_by = "lua",
             timestamp = os.date("%Y-%m-%d %H:%M:%S")
-          }
         }
-      end
+    }
+end
+]]
     },
 
     -- Step 2: Data generation with Python
@@ -205,37 +208,40 @@ def run(inputs):
     -- Step 6: Final cleanup and reporting with Lua
     lua_finalize = {
       depends_on = { "python_analysis", "shell_file_ops" },
-      run = function(inputs)
-        print("Step 6: Finalizing workflow with Lua...")
-        
-        local analysis = inputs["python_analysis"]["analysis"]
-        local file_ops = inputs["shell_file_ops"]
-        
-        print("Analysis results:")
-        print("  - Data quality range spread:", analysis["data_quality"]["range_spread"])
-        print("  - Average value:", analysis["data_quality"]["avg_value"])
-        print("  - Files created:", analysis["file_operations"]["files_created"])
-        
-        -- Create final summary
-        local summary = {
-          workflow_name = "comprehensive_multi_language_pipeline",
-          steps_completed = 6,
-          languages_used = {"lua", "python", "shell", "bash"},
-          processing_stats = {
+      language = "lua",
+      code = [[
+function run(inputs)
+    print("Step 6: Finalizing workflow with Lua...")
+    
+    local analysis = inputs["python_analysis"]["analysis"]
+    local file_ops = inputs["shell_file_ops"]
+    
+    print("Analysis results:")
+    print("  - Data quality range spread:", analysis["data_quality"]["range_spread"])
+    print("  - Average value:", analysis["data_quality"]["avg_value"])
+    print("  - Files created:", analysis["file_operations"]["files_created"])
+    
+    -- Create final summary
+    local summary = {
+        workflow_name = "comprehensive_multi_language_pipeline",
+        steps_completed = 6,
+        languages_used = {"lua", "python", "shell", "bash"},
+        processing_stats = {
             data_points_processed = analysis["data_quality"]["data_points"],
             files_created = analysis["file_operations"]["files_created"],
             workspace_used = analysis["file_operations"]["workspace"]
-          },
-          recommendations = analysis["recommendations"],
-          final_status = "SUCCESS",
-          completed_at = os.date("%Y-%m-%d %H:%M:%S")
-        }
-        
-        print("✅ Workflow completed successfully!")
-        print("Languages demonstrated: Lua, Python, Shell/Bash")
-        
-        return summary
-      end
+        },
+        recommendations = analysis["recommendations"],
+        final_status = "SUCCESS",
+        completed_at = os.date("%Y-%m-%d %H:%M:%S")
+    }
+    
+    print("✅ Workflow completed successfully!")
+    print("Languages demonstrated: Lua, Python, Shell/Bash")
+    
+    return summary
+end
+]]
     },
 
     -- Step 7: Optional cleanup with Shell

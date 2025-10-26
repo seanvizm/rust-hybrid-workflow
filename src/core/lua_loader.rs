@@ -6,6 +6,9 @@ pub struct Step {
     pub language: String,
     pub code: String,
     pub depends_on: Vec<String>,
+    // WASM-specific fields
+    pub module_path: Option<String>,
+    pub function_name: Option<String>,
 }
 
 pub fn load_workflow(path: &str) -> anyhow::Result<Vec<Step>> {
@@ -25,11 +28,36 @@ pub fn load_workflow(path: &str) -> anyhow::Result<Vec<Step>> {
         // Default to "lua" if language is not specified
         let language: String = step.get("language").unwrap_or_else(|_| "lua".to_string());
         
-        // For Lua steps, extract the function and convert to code string
-        let code: String = if language == "lua" {
-            // For pure Lua workflows, we need to handle the run function differently
-            // For now, we'll create a placeholder - this will need more sophisticated handling
-            format!("-- Lua function for step: {}", name)
+        // Handle WASM-specific fields
+        let module_path: Option<String> = step.get("module").ok();
+        let function_name: Option<String> = step.get("func").ok()
+            .or_else(|| step.get("function").ok());
+        
+        // Extract code for all languages, including Lua
+        let code: String = if language == "wasm" || language == "webassembly" {
+            // For WASM steps, code field is optional (module path is more important)
+            step.get("code").unwrap_or_else(|_| String::new())
+        } else if language == "lua" {
+            // For Lua steps, check for code field first, then fallback to legacy format
+            match step.get::<_, String>("code") {
+                Ok(code_str) => code_str,
+                Err(_) => {
+                    // Legacy format: Lua function is embedded directly
+                    // Convert the function to a code string if possible
+                    if step.contains_key("run")? {
+                        return Err(anyhow::anyhow!(
+                            "Legacy Lua workflow format detected in step '{}'. \
+                            Please use the new format with 'language = \"lua\"' and 'code = [[...]]' instead of 'run = function()'.",
+                            name
+                        ));
+                    } else {
+                        return Err(anyhow::anyhow!(
+                            "Lua step '{}' is missing required 'code' field", 
+                            name
+                        ));
+                    }
+                }
+            }
         } else {
             step.get("code")?
         };
@@ -41,6 +69,8 @@ pub fn load_workflow(path: &str) -> anyhow::Result<Vec<Step>> {
             language,
             code,
             depends_on: depends_on.unwrap_or_default(),
+            module_path,
+            function_name,
         });
     }
 
@@ -60,9 +90,12 @@ workflow = {
   description = "Test workflow",
   steps = {
     test_step = {
-      run = function()
-        return { result = "success" }
-      end
+      language = "lua",
+      code = [[
+function run()
+    return { result = "success" }
+end
+]]
     }
   }
 }
@@ -75,6 +108,9 @@ workflow = {
         // Cleanup
         let _ = fs::remove_file(test_file);
 
+        if let Err(e) = &result {
+            eprintln!("Test workflow failed with error: {:?}", e);
+        }
         assert!(result.is_ok());
         let steps = result.unwrap();
         assert_eq!(steps.len(), 1);
@@ -124,11 +160,21 @@ workflow = {
   description = "Test workflow with dependencies",
   steps = {
     first = {
-      run = function() return {data = 1} end
+      language = "lua",
+      code = [[
+function run() 
+    return {data = 1} 
+end
+]]
     },
     second = {
       depends_on = {"first"},
-      run = function(inputs) return {result = inputs.first.data * 2} end
+      language = "lua",
+      code = [[
+function run(inputs) 
+    return {result = inputs.first.data * 2} 
+end
+]]
     }
   }
 }
@@ -141,6 +187,9 @@ workflow = {
         // Cleanup
         let _ = fs::remove_file(test_file);
 
+        if let Err(e) = &result {
+            eprintln!("Dependencies test workflow failed with error: {:?}", e);
+        }
         assert!(result.is_ok());
         let steps = result.unwrap();
         assert_eq!(steps.len(), 2);

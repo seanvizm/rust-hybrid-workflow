@@ -1,11 +1,12 @@
 # 🚀 Rust Hybrid Workflow Engine
 
-A high-performance, multi-language workflow orchestration engine built in Rust that seamlessly executes Python, JavaScript/Node.js, Lua, and Shell scripts in complex dependency graphs.
+A high-performance, multi-language workflow orchestration engine built in Rust that seamlessly executes Python, JavaScript/Node.js, WebAssembly, Lua, and Shell scripts in complex dependency graphs.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024+-blue.svg)](https://www.rust-lang.org)
 [![Python](https://img.shields.io/badge/python-3.6+-green.svg)](https://www.python.org)
 [![JavaScript](https://img.shields.io/badge/javascript-ES6+-yellow.svg)](https://nodejs.org)
+[![WebAssembly](https://img.shields.io/badge/webassembly-1.0-purple.svg)](https://webassembly.org)
 [![Lua](https://img.shields.io/badge/lua-5.4-blue.svg)](https://www.lua.org)
 
 ## 📋 Table of Contents
@@ -25,7 +26,7 @@ A high-performance, multi-language workflow orchestration engine built in Rust t
 
 ## 🌟 Overview
 
-The Rust Hybrid Workflow Engine is a powerful orchestration tool that allows you to define complex multi-step workflows using Lua configuration files. Each step in your workflow can be executed in different programming languages (Python, JavaScript/Node.js, Lua, Shell), with automatic dependency resolution and data passing between steps.
+The Rust Hybrid Workflow Engine is a powerful orchestration tool that allows you to define complex multi-step workflows using Lua configuration files. Each step in your workflow can be executed in different programming languages (Python, JavaScript/Node.js, WebAssembly, Lua, Shell), with automatic dependency resolution and data passing between steps.
 
 Perfect for:
 - **Data Processing Pipelines**: Chain together data fetching, transformation, and storage operations
@@ -35,7 +36,7 @@ Perfect for:
 
 ## ✨ Key Features
 
-- 🔀 **Multi-Language Support**: Execute Python, JavaScript/Node.js, Lua, and Shell scripts seamlessly
+- 🔀 **Multi-Language Support**: Execute Python, JavaScript/Node.js, WebAssembly, Lua, and Shell scripts seamlessly
 - 📊 **Dependency Management**: Automatic topological sorting of workflow steps
 - 🔄 **Data Flow**: Pass results between steps across different languages
 - 🚀 **High Performance**: Built in Rust for speed and memory safety
@@ -51,22 +52,26 @@ Perfect for:
 - **[Lua 5.4](https://www.lua.org/)** - Workflow configuration and scripting
 - **[Python 3.6+](https://www.python.org/)** - Data processing and external integrations
 - **[Node.js](https://nodejs.org/)** - JavaScript runtime for modern web and backend logic
+- **[WebAssembly](https://webassembly.org/)** - High-performance, secure code execution
 - **Shell/Bash** - System operations and command execution
 
 ### Dependencies
 - **[mlua](https://crates.io/crates/mlua)** (0.9) - Lua integration with Rust
 - **[pyo3](https://crates.io/crates/pyo3)** (0.23) - Python integration with auto-initialization
+- **[wasmtime](https://crates.io/crates/wasmtime)** (26.0) - WebAssembly runtime for Rust
 - **[anyhow](https://crates.io/crates/anyhow)** (1.0) - Error handling and context
 - **[serde_json](https://crates.io/crates/serde_json)** (1.0) - JSON serialization for data exchange
 - **[tempfile](https://crates.io/crates/tempfile)** (3.0) - Temporary file management
+- **[chrono](https://crates.io/crates/chrono)** (0.4) - Date and time handling
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Rust (Edition 2024 or later)
+- Rust (Edition 2024 or later) with `wasm32-unknown-unknown` target
 - Python 3.6+
 - Node.js 14+ (for JavaScript steps)
 - Lua 5.4 (optional, for validation)
+- WebAssembly modules (*.wasm files) for WASM steps
 
 ### Installation
 
@@ -89,7 +94,7 @@ Perfect for:
 ### Running Specific Workflows
 
 ```bash
-# Run a specific workflow file
+# Run a specific workflow file (automatically looks in workflows/ folder)
 cargo run hybrid_workflow.lua
 ```
 
@@ -144,8 +149,16 @@ function run(inputs) {
 ]]
     },
 
-    save_results = {
+    compute_heavy_task = {
       depends_on = { "analyze_data" },
+      language = "wasm",
+      module = "workflows/compute_module.wasm",
+      func = "process_data",
+      -- High-performance computation using WebAssembly
+    },
+
+    save_results = {
+      depends_on = { "compute_heavy_task" },
       language = "shell",
       code = [[
 #!/bin/bash
@@ -164,11 +177,14 @@ echo '{"status": "saved"}'
 # Run all demo workflows
 cargo run
 
-# Run specific workflow from "workflows" folder
+# Run specific workflow (automatically looks in workflows/ folder)
 cargo run your_workflow.lua
 
-# Run with absolute path
-cargo run /path/to/your/workflow.lua
+# Using the compiled binary directly
+./target/release/hybrid-workflow-engine your_workflow.lua
+
+# Note: The engine automatically searches in the workflows/ directory
+# So you don't need to specify "workflows/" in the command
 ```
 
 ## 📚 Workflow Examples
@@ -209,7 +225,14 @@ Ultimate demonstration using all supported languages:
 -- Complete multi-language integration with complex data flow
 ```
 
-### 6. Comprehensive Workflow (`comprehensive_workflow.lua`)
+### 6. WebAssembly Workflow (`wasm_workflow.lua`)
+High-performance computing with WebAssembly integration:
+```lua
+-- Python → WASM → WASM → WASM → JavaScript → Python
+-- Demonstrates secure, high-performance computation with WASM modules
+```
+
+### 7. Comprehensive Workflow (`comprehensive_workflow.lua`)
 Complex multi-language pipeline demonstrating core features:
 ```lua
 -- Python → Lua → Shell → Python
@@ -225,7 +248,8 @@ Complex multi-language pipeline demonstrating core features:
 │ • Parse .lua    │    │ • Dependency    │    │ • Python Runner │
 │ • Extract steps │    │   Resolution    │    │ • JavaScript    │
 │ • Validate      │    │ • Execution     │    │   Runner        │
-│                 │    │   Order         │    │ • Lua Runner    │
+│                 │    │   Order         │    │ • WASM Runner   │
+│                 │    │                 │    │ • Lua Runner    │
 │                 │    │                 │    │ • Shell Runner  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
@@ -237,6 +261,7 @@ Complex multi-language pipeline demonstrating core features:
 - **Runners (`src/runners/`)**: Language-specific execution engines
   - `python_runner.rs` - Python script execution with PyO3
   - `javascript_runner.rs` - JavaScript/Node.js execution with process spawning
+  - `wasm_runner.rs` - WebAssembly module execution with Wasmtime
   - `lua_runner.rs` - Lua script execution with MLua
   - `shell_runner.rs` - Shell command execution
 
@@ -269,7 +294,7 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 
 ### Phase 1: Core Enhancements (v0.2.0)
 - [x] **JavaScript/Node.js Runner** - ✅ JavaScript execution support with Node.js integration
-- [ ] **WebAssembly Support** - Execute WASM modules as workflow steps
+- [x] **WebAssembly Support** - ✅ Execute WASM modules with Wasmtime runtime integration
 - [ ] **Configuration Management** - External config files and environment variables
 - [ ] **Improved Error Reporting** - Better error messages with line numbers and context
 
