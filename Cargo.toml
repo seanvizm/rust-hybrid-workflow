@@ -1,0 +1,11 @@
+[package]
+name = "hybrid-workflow-engine"
+version = "0.1.0"
+authors = ["Spydevman <spydevman@gmail.com>"]
+edition = "2024"
+
+[dependencies]
+mlua = { version = "0.9", features = ["lua54", "vendored"] }
+pyo3 = { version = "0.23", features = ["auto-initialize"] }
+anyhow = "1.0"
+serde_json = "1.0"
