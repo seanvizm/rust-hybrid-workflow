@@ -5,24 +5,71 @@ mod pages;
 mod utils;
 
 use core::run_workflow;
+use std::env;
+use std::path::Path;
 
 fn main() -> anyhow::Result<()> {
-    println!("=== Running hybrid workflow (Python + Lua) ===");
-    run_workflow("workflows/hybrid_workflow.lua")?;
+    let args: Vec<String> = env::args().collect();
     
-    println!("\n=== Running pure Lua workflow ===");
-    run_workflow("workflows/workflow.lua")?;
-    
-    println!("\n=== Running shell workflow (Shell + Python) ===");
-    run_workflow("workflows/shell_workflow.lua")?;
-    
-    println!("\n=== Running pure shell workflow ===");
-    run_workflow("workflows/pure_shell_workflow.lua")?;
-    
-    println!("\n=== Running comprehensive multi-language workflow ===");
-    run_workflow("workflows/comprehensive_workflow.lua")?;
+    if args.len() > 1 {
+        // User provided a workflow file argument
+        let workflow_path = &args[1];
+        let full_path = resolve_workflow_path(workflow_path);
+        
+        println!("=== Running workflow: {} ===", full_path);
+        run_workflow(&full_path)?;
+    } else {
+        // Default behavior: run all demo workflows
+        println!("=== Running hybrid workflow (Python + Lua) ===");
+        run_workflow("workflows/hybrid_workflow.lua")?;
+        
+        println!("\n=== Running pure Lua workflow ===");
+        run_workflow("workflows/workflow.lua")?;
+        
+        println!("\n=== Running shell workflow (Shell + Python) ===");
+        run_workflow("workflows/shell_workflow.lua")?;
+        
+        println!("\n=== Running pure shell workflow ===");
+        run_workflow("workflows/pure_shell_workflow.lua")?;
+        
+        println!("\n=== Running comprehensive multi-language workflow ===");
+        run_workflow("workflows/comprehensive_workflow.lua")?;
+    }
     
     Ok(())
+}
+
+/// Resolves workflow path to always look in workflows/ folder or subfolders
+fn resolve_workflow_path(path: &str) -> String {
+    // If path already starts with workflows/, use as-is
+    if path.starts_with("workflows/") {
+        return path.to_string();
+    }
+    
+    // If it's just a filename or relative path, prepend workflows/
+    if !path.contains('/') || !Path::new(path).exists() {
+        let workflow_path = format!("workflows/{}", path);
+        
+        // Check if the file exists in workflows/
+        if Path::new(&workflow_path).exists() {
+            return workflow_path;
+        }
+        
+        // Also check common subfolders
+        let subfolders = ["examples", "templates", "tests"];
+        for subfolder in &subfolders {
+            let subfolder_path = format!("workflows/{}/{}", subfolder, path);
+            if Path::new(&subfolder_path).exists() {
+                return subfolder_path;
+            }
+        }
+        
+        // Return the workflows/ path even if it doesn't exist (let run_workflow handle the error)
+        return workflow_path;
+    }
+    
+    // If it's an absolute path or relative path that exists, use as-is
+    path.to_string()
 }
 
 #[cfg(test)]

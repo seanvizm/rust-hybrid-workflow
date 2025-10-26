@@ -20,7 +20,8 @@ pub fn run_workflow(path: &str) -> anyhow::Result<()> {
         None
     };
 
-    for step in &steps {
+    for (step_index, step) in steps.iter().enumerate() {
+        let step_number = step_index + 1;
         let mut inputs = HashMap::new();
         for dep in &step.depends_on {
             if let Some(val) = results.get(dep) {
@@ -41,7 +42,7 @@ pub fn run_workflow(path: &str) -> anyhow::Result<()> {
             _ => return Err(anyhow::anyhow!("Unsupported language: {}", step.language)),
         };
 
-        println!("Step '{}' output: {}", step.name, output);
+        println!("Step {} '{}' output: {}", step_number, step.name, output);
         results.insert(step.name.clone(), output);
     }
 
