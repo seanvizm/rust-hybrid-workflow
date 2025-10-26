@@ -121,3 +121,170 @@ fn lua_to_json(value: &Value) -> anyhow::Result<serde_json::Value> {
         _ => Ok(serde_json::Value::String(format!("{:?}", value))),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mlua::Lua;
+    use std::collections::HashMap;
+
+    fn create_test_lua_context() -> Lua {
+        let lua = Lua::new();
+        let workflow_script = r#"
+workflow = {
+  name = "test_workflow",
+  description = "Test workflow for unit tests",
+  steps = {
+    simple_step = {
+      run = function()
+        return { result = "success", value = 42 }
+      end
+    },
+    input_step = {
+      run = function(inputs)
+        local data = inputs.test_input.data
+        local doubled = {}
+        for i, v in ipairs(data) do
+          doubled[i] = v * 2
+        end
+        return { doubled = doubled }
+      end
+    }
+  }
+}
+"#;
+        lua.load(workflow_script).exec().unwrap();
+        lua
+    }
+
+    #[test]
+    fn test_run_lua_step_no_inputs() {
+        let lua = create_test_lua_context();
+        let workflow_table: Table = lua.globals().get("workflow").unwrap();
+        let inputs = HashMap::new();
+        
+        let result = run_lua_step("simple_step", &lua, &workflow_table, &inputs);
+        
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        assert_eq!(output.get("result").unwrap().as_str().unwrap(), "success");
+        assert_eq!(output.get("value").unwrap().as_i64().unwrap(), 42);
+    }
+
+    #[test]
+    fn test_run_lua_step_with_inputs() {
+        let lua = create_test_lua_context();
+        let workflow_table: Table = lua.globals().get("workflow").unwrap();
+        let mut inputs = HashMap::new();
+        let input_data = serde_json::json!({"data": [1, 2, 3]});
+        inputs.insert("test_input".to_string(), input_data);
+        
+        let result = run_lua_step("input_step", &lua, &workflow_table, &inputs);
+        
+        assert!(result.is_ok());
+        let output = result.unwrap();
+        if let Some(doubled) = output.get("doubled") {
+            let expected = serde_json::json!([2, 4, 6]);
+            assert_eq!(doubled, &expected);
+        }
+    }
+
+    #[test]
+    fn test_run_lua_step_nonexistent_step() {
+        let lua = create_test_lua_context();
+        let workflow_table: Table = lua.globals().get("workflow").unwrap();
+        let inputs = HashMap::new();
+        
+        let result = run_lua_step("nonexistent_step", &lua, &workflow_table, &inputs);
+        
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_json_to_lua_conversion() {
+        let lua = Lua::new();
+        
+        // Test null
+        let null_val = serde_json::Value::Null;
+        let lua_val = json_to_lua(&lua, &null_val).unwrap();
+        assert!(matches!(lua_val, Value::Nil));
+        
+        // Test boolean
+        let bool_val = serde_json::Value::Bool(true);
+        let lua_val = json_to_lua(&lua, &bool_val).unwrap();
+        assert!(matches!(lua_val, Value::Boolean(true)));
+        
+        // Test number
+        let num_val = serde_json::Value::Number(42.into());
+        let lua_val = json_to_lua(&lua, &num_val).unwrap();
+        assert!(matches!(lua_val, Value::Integer(42)));
+        
+        // Test string
+        let str_val = serde_json::Value::String("hello".to_string());
+        let lua_val = json_to_lua(&lua, &str_val).unwrap();
+        if let Value::String(s) = lua_val {
+            assert_eq!(s.to_str().unwrap(), "hello");
+        } else {
+            panic!("Expected Lua string");
+        }
+    }
+
+    #[test]
+    fn test_lua_to_json_conversion() {
+        let lua = Lua::new();
+        
+        // Test nil
+        let nil_val = Value::Nil;
+        let json_val = lua_to_json(&nil_val).unwrap();
+        assert!(json_val.is_null());
+        
+        // Test boolean
+        let bool_val = Value::Boolean(true);
+        let json_val = lua_to_json(&bool_val).unwrap();
+        assert_eq!(json_val, serde_json::Value::Bool(true));
+        
+        // Test integer
+        let int_val = Value::Integer(42);
+        let json_val = lua_to_json(&int_val).unwrap();
+        assert_eq!(json_val, serde_json::Value::Number(42.into()));
+        
+        // Test string
+        let str_val = Value::String(lua.create_string("hello").unwrap());
+        let json_val = lua_to_json(&str_val).unwrap();
+        assert_eq!(json_val, serde_json::Value::String("hello".to_string()));
+    }
+
+    #[test]
+    fn test_lua_array_conversion() {
+        let lua = Lua::new();
+        
+        // Create Lua array (1-based indexing)
+        let table = lua.create_table().unwrap();
+        table.set(1, "first").unwrap();
+        table.set(2, "second").unwrap();
+        table.set(3, "third").unwrap();
+        
+        let lua_val = Value::Table(table);
+        let json_val = lua_to_json(&lua_val).unwrap();
+        
+        let expected = serde_json::json!(["first", "second", "third"]);
+        assert_eq!(json_val, expected);
+    }
+
+    #[test]
+    fn test_lua_object_conversion() {
+        let lua = Lua::new();
+        
+        // Create Lua object (table with string keys)
+        let table = lua.create_table().unwrap();
+        table.set("name", "test").unwrap();
+        table.set("value", 42).unwrap();
+        
+        let lua_val = Value::Table(table);
+        let json_val = lua_to_json(&lua_val).unwrap();
+        
+        assert!(json_val.is_object());
+        assert_eq!(json_val.get("name").unwrap().as_str().unwrap(), "test");
+        assert_eq!(json_val.get("value").unwrap().as_i64().unwrap(), 42);
+    }
+}

@@ -81,3 +81,137 @@ fn sort_steps_by_dependencies(steps: Vec<Step>) -> anyhow::Result<Vec<Step>> {
     
     Ok(sorted)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_sort_steps_no_dependencies() {
+        let steps = vec![
+            Step {
+                name: "step1".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec![],
+            },
+            Step {
+                name: "step2".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec![],
+            },
+        ];
+
+        let result = sort_steps_by_dependencies(steps);
+        assert!(result.is_ok());
+        let sorted = result.unwrap();
+        assert_eq!(sorted.len(), 2);
+    }
+
+    #[test]
+    fn test_sort_steps_with_dependencies() {
+        let steps = vec![
+            Step {
+                name: "step2".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec!["step1".to_string()],
+            },
+            Step {
+                name: "step1".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec![],
+            },
+        ];
+
+        let result = sort_steps_by_dependencies(steps);
+        assert!(result.is_ok());
+        let sorted = result.unwrap();
+        assert_eq!(sorted.len(), 2);
+        assert_eq!(sorted[0].name, "step1");
+        assert_eq!(sorted[1].name, "step2");
+    }
+
+    #[test]
+    fn test_sort_steps_circular_dependency() {
+        let steps = vec![
+            Step {
+                name: "step1".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec!["step2".to_string()],
+            },
+            Step {
+                name: "step2".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec!["step1".to_string()],
+            },
+        ];
+
+        let result = sort_steps_by_dependencies(steps);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_sort_steps_complex_dependencies() {
+        let steps = vec![
+            Step {
+                name: "step3".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec!["step1".to_string(), "step2".to_string()],
+            },
+            Step {
+                name: "step1".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec![],
+            },
+            Step {
+                name: "step2".to_string(),
+                language: "lua".to_string(),
+                code: "".to_string(),
+                depends_on: vec!["step1".to_string()],
+            },
+        ];
+
+        let result = sort_steps_by_dependencies(steps);
+        assert!(result.is_ok());
+        let sorted = result.unwrap();
+        assert_eq!(sorted.len(), 3);
+        assert_eq!(sorted[0].name, "step1");
+        assert_eq!(sorted[1].name, "step2");
+        assert_eq!(sorted[2].name, "step3");
+    }
+
+    #[test]
+    fn test_run_workflow_integration() {
+        // Create a simple test workflow file
+        let test_workflow = r#"
+workflow = {
+  name = "integration_test",
+  description = "Integration test workflow",
+  steps = {
+    test_step = {
+      run = function()
+        return { status = "completed", test = true }
+      end
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_integration.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = run_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok(), "Integration test workflow should run successfully");
+    }
+}

@@ -46,3 +46,136 @@ pub fn load_workflow(path: &str) -> anyhow::Result<Vec<Step>> {
 
     Ok(result)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_load_valid_lua_workflow() {
+        let test_workflow = r#"
+workflow = {
+  name = "test_workflow",
+  description = "Test workflow",
+  steps = {
+    test_step = {
+      run = function()
+        return { result = "success" }
+      end
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_lua_loader.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = load_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok());
+        let steps = result.unwrap();
+        assert_eq!(steps.len(), 1);
+        assert_eq!(steps[0].name, "test_step");
+        assert_eq!(steps[0].language, "lua");
+        assert!(steps[0].depends_on.is_empty());
+    }
+
+    #[test]
+    fn test_load_python_workflow() {
+        let test_workflow = r#"
+workflow = {
+  name = "python_test",
+  description = "Python test workflow",
+  steps = {
+    python_step = {
+      language = "python",
+      code = [[
+def run():
+    return {"result": "success"}
+]]
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_python_loader.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = load_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok());
+        let steps = result.unwrap();
+        assert_eq!(steps.len(), 1);
+        assert_eq!(steps[0].name, "python_step");
+        assert_eq!(steps[0].language, "python");
+        assert!(steps[0].code.contains("def run():"));
+    }
+
+    #[test]
+    fn test_load_workflow_with_dependencies() {
+        let test_workflow = r#"
+workflow = {
+  name = "dependency_test",
+  description = "Test workflow with dependencies",
+  steps = {
+    first = {
+      run = function() return {data = 1} end
+    },
+    second = {
+      depends_on = {"first"},
+      run = function(inputs) return {result = inputs.first.data * 2} end
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_deps_loader.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = load_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok());
+        let steps = result.unwrap();
+        assert_eq!(steps.len(), 2);
+        
+        // Find the steps (order might vary)
+        let first_step = steps.iter().find(|s| s.name == "first").unwrap();
+        let second_step = steps.iter().find(|s| s.name == "second").unwrap();
+        
+        assert!(first_step.depends_on.is_empty());
+        assert_eq!(second_step.depends_on, vec!["first"]);
+    }
+
+    #[test]
+    fn test_load_nonexistent_file() {
+        let result = load_workflow("workflows/nonexistent_file.lua");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_load_invalid_lua_syntax() {
+        let invalid_workflow = r#"
+workflow = {
+  name = "invalid"
+  -- missing comma above should cause syntax error
+  description = "Invalid workflow"
+}
+"#;
+        let test_file = "workflows/test_invalid_syntax.lua";
+        fs::write(test_file, invalid_workflow).expect("Should write test file");
+
+        let result = load_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_err());
+    }
+}
