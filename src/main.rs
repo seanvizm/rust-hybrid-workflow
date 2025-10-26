@@ -7,6 +7,7 @@ mod utils;
 use core::run_workflow;
 use std::env;
 use std::path::Path;
+use std::fs;
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
@@ -19,30 +20,40 @@ fn main() -> anyhow::Result<()> {
         println!("=== Running workflow: {} ===", workflow_filename);
         run_workflow(&full_path)?;
     } else {
-        // Default behavior: run all demo workflows
-        println!("=== Running hybrid workflow (Python + Lua) ===");
-        run_workflow("workflows/hybrid_workflow.lua")?;
+        // Default behavior: run all workflows found in the workflows directory
+        let workflow_files = discover_workflow_files("workflows")?;
         
-        println!("\n=== Running pure Lua workflow ===");
-        run_workflow("workflows/workflow.lua")?;
+        if workflow_files.is_empty() {
+            println!("No workflow files found in workflows directory");
+            return Ok(());
+        }
         
-        println!("\n=== Running shell workflow (Shell + Python) ===");
-        run_workflow("workflows/shell_workflow.lua")?;
+        println!("Found {} workflow files. Running all workflows...\n", workflow_files.len());
         
-        println!("\n=== Running pure shell workflow ===");
-        run_workflow("workflows/pure_shell_workflow.lua")?;
-        
-        println!("\n=== Running comprehensive multi-language workflow ===");
-        run_workflow("workflows/comprehensive_workflow.lua")?;
-        
-        println!("\n=== Running JavaScript workflow ===");
-        run_workflow("workflows/javascript_workflow.lua")?;
-        
-        println!("\n=== Running JavaScript integration workflow (Python + JavaScript + Shell) ===");
-        run_workflow("workflows/js_python_shell_workflow.lua")?;
-        
-        println!("\n=== Running WebAssembly workflow (Python + WASM + JavaScript) ===");
-        run_workflow("workflows/wasm_workflow.lua")?;
+        for (index, workflow_path) in workflow_files.iter().enumerate() {
+            if index > 0 {
+                println!(); // Add spacing between workflows
+            }
+            
+            let workflow_info = get_workflow_info(workflow_path)?;
+            println!("=== Running workflow {}/{}: {} ===", 
+                index + 1, 
+                workflow_files.len(),
+                workflow_info.display_name
+            );
+            
+            if let Some(description) = workflow_info.description {
+                println!("Description: {}", description);
+            }
+            
+            match run_workflow(workflow_path) {
+                Ok(_) => println!("✅ Workflow '{}' completed successfully", workflow_info.name),
+                Err(e) => {
+                    println!("❌ Workflow '{}' failed: {}", workflow_info.name, e);
+                    // Continue with other workflows instead of stopping
+                }
+            }
+        }
     }
     
     Ok(())
@@ -81,21 +92,112 @@ fn resolve_workflow_path(path: &str) -> String {
     path.to_string()
 }
 
+/// Discovers all workflow files in the specified directory
+fn discover_workflow_files(dir: &str) -> anyhow::Result<Vec<String>> {
+    let mut workflow_files = Vec::new();
+    
+    if !Path::new(dir).exists() {
+        return Ok(workflow_files);
+    }
+    
+    let entries = fs::read_dir(dir)?;
+    
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+        
+        if path.is_file() {
+            if let Some(extension) = path.extension() {
+                if extension == "lua" {
+                    if let Some(path_str) = path.to_str() {
+                        // Skip temporary test files
+                        if !path_str.contains("test_temp_") {
+                            workflow_files.push(path_str.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Sort for consistent ordering
+    workflow_files.sort();
+    Ok(workflow_files)
+}
+
+/// Workflow information extracted from the file
+#[derive(Debug)]
+struct WorkflowInfo {
+    name: String,
+    description: Option<String>,
+    display_name: String,
+}
+
+/// Extracts workflow name and description from a workflow file
+fn get_workflow_info(workflow_path: &str) -> anyhow::Result<WorkflowInfo> {
+    use mlua::Lua;
+    
+    let lua = Lua::new();
+    let workflow_content = fs::read_to_string(workflow_path)?;
+    
+    // Execute the Lua file to get the workflow table
+    lua.load(&workflow_content).exec()?;
+    
+    // Get the workflow table
+    let workflow_table: mlua::Table = lua.globals().get("workflow")?;
+    
+    let name: String = workflow_table.get("name").unwrap_or_else(|_| {
+        // Fallback to filename if name not found
+        Path::new(workflow_path)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_string()
+    });
+    
+    let description: Option<String> = workflow_table.get("description").ok();
+    
+    // Create a display name from the filename for better readability
+    let display_name = Path::new(workflow_path)
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or(workflow_path)
+        .to_string();
+    
+    Ok(WorkflowInfo {
+        name,
+        description,
+        display_name,
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use crate::core::run_workflow;
+    use crate::{discover_workflow_files, get_workflow_info};
     use std::fs;
 
     #[test]
-    fn test_hybrid_workflow_execution() {
-        let result = run_workflow("workflows/hybrid_workflow.lua");
-        assert!(result.is_ok(), "Hybrid workflow should execute successfully");
-    }
-
-    #[test]
-    fn test_pure_lua_workflow_execution() {
-        let result = run_workflow("workflows/workflow.lua");
-        assert!(result.is_ok(), "Pure Lua workflow should execute successfully");
+    fn test_all_existing_workflows() {
+        let workflow_files = discover_workflow_files("workflows")
+            .expect("Should be able to discover workflow files");
+        
+        assert!(!workflow_files.is_empty(), "Should find at least one workflow file");
+        
+        for workflow_path in workflow_files {
+            let workflow_info = get_workflow_info(&workflow_path)
+                .expect(&format!("Should be able to get info for {}", workflow_path));
+            
+            println!("Testing workflow: {} ({})", workflow_info.name, workflow_info.display_name);
+            
+            let result = run_workflow(&workflow_path);
+            assert!(result.is_ok(), 
+                "Workflow '{}' ({}) should execute successfully: {:?}", 
+                workflow_info.name, 
+                workflow_path,
+                result.err()
+            );
+        }
     }
 
     #[test]
