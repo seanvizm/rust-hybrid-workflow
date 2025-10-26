@@ -14,6 +14,7 @@ A high-performance, multi-language workflow orchestration engine built in Rust t
 - [Overview](#overview)
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
+- [Rust Edition 2024 Ready](#rust-edition-2024-ready)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -63,6 +64,35 @@ Perfect for:
 - **[serde_json](https://crates.io/crates/serde_json)** (1.0) - JSON serialization for data exchange
 - **[tempfile](https://crates.io/crates/tempfile)** (3.0) - Temporary file management
 - **[chrono](https://crates.io/crates/chrono)** (0.4) - Date and time handling
+
+## 🎯 Rust Edition 2024 Ready
+
+This project is built with **Rust Edition 2024**, leveraging the latest language features and improvements for enhanced performance and developer experience.
+
+### 🚀 Edition 2024 Benefits
+
+**Performance Enhancements:**
+- ⚡ **Advanced Compiler Optimizations** - Improved code generation and smaller binary sizes
+- 🔋 **Enhanced Async Runtime** - Better async/await performance and reduced overhead
+- 🎯 **Smart Memory Management** - More efficient memory allocation patterns
+
+**Developer Experience:**
+- 🛠️ **Improved Error Messages** - Clearer diagnostics with actionable suggestions
+- 🔍 **Enhanced Pattern Matching** - More expressive `match` arms and `let-else` patterns
+- 📝 **Better Type Inference** - Reduced need for explicit type annotations
+
+**Language Features:**
+- 🔄 **Advanced Macro System** - More powerful procedural macros for code generation
+- 🧩 **Refined Lifetime Management** - Simplified lifetime annotations and better ergonomics
+- 🌟 **Future-Ready Syntax** - Latest language idioms and best practices
+
+**Why This Matters for Workflow Engine:**
+- **Reliability**: Latest safety improvements reduce runtime errors
+- **Performance**: Optimized execution for multi-language orchestration
+- **Maintainability**: Modern syntax makes the codebase easier to extend
+- **Compatibility**: Forward-compatible with future Rust developments
+
+> 💡 **Pro Tip**: All dependencies are verified compatible with Edition 2024, ensuring a stable and modern development experience.
 
 ## 🚀 Quick Start
 
