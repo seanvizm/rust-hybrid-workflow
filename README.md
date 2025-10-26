@@ -292,25 +292,29 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 
 ## 🗺 Roadmap
 
-### Phase 1: Core Enhancements (v0.2.0)
+### Phase 1: Core Components (v0.1.0)
+- [x] **Main Hybrid Workflow Engine** - ✅ Main orchestration logic and workflow execution
+- [x] **Lua Workflow Script Loader** - ✅ Parses and validates Lua workflow files
+- [x] **Python Runner** - ✅ Python script execution with PyO3 integration
+- [x] **Shell Script Runner** - ✅ Shell command execution support
 - [x] **JavaScript/Node.js Runner** - ✅ JavaScript execution support with Node.js integration
 - [x] **WebAssembly Support** - ✅ Execute WASM modules with Wasmtime runtime integration
+
+### Phase 2: Advanced Features (v0.2.0)
 - [ ] **Configuration Management** - External config files and environment variables
 - [ ] **Improved Error Reporting** - Better error messages with line numbers and context
-
-### Phase 2: Advanced Features (v0.3.0)
 - [ ] **Parallel Execution** - Execute independent steps concurrently
 - [ ] **Workflow Visualization** - Generate dependency graphs and execution flows
 - [ ] **REST API Interface** - HTTP API for remote workflow execution
 - [ ] **Database Integration** - Built-in connectors for common databases
 
-### Phase 3: Enterprise Features (v0.4.0)
+### Phase 3: Enterprise Features (v0.3.0)
 - [ ] **Workflow Scheduling** - Cron-like scheduling and triggers
 - [ ] **Monitoring & Metrics** - Performance monitoring and observability
 - [ ] **Plugin System** - Custom language runners and extensions
 - [ ] **Distributed Execution** - Multi-node workflow execution
 
-### Phase 4: Cloud & Integration (v0.5.0)
+### Phase 4: Cloud & Integration (v0.4.0)
 - [ ] **Cloud Connectors** - AWS, GCP, Azure integrations
 - [ ] **Container Support** - Docker and Kubernetes integration
 - [ ] **Message Queue Integration** - RabbitMQ, Kafka, Redis support
