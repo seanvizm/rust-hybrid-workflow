@@ -1,5 +1,5 @@
 use crate::core::lua_loader::{load_workflow, Step};
-use crate::runners::{run_lua_step, run_python_step, run_shell_step};
+use crate::runners::{run_lua_step, run_python_step, run_shell_step, run_javascript_step};
 use mlua::Lua;
 use std::collections::{HashMap, HashSet};
 
@@ -39,6 +39,7 @@ pub fn run_workflow(path: &str) -> anyhow::Result<()> {
                 }
             }
             "bash" | "shell" | "sh" => run_shell_step(&step.name, &step.code, &inputs)?,
+            "javascript" | "js" | "node" | "nodejs" => run_javascript_step(&step.name, &step.code, &inputs)?,
             _ => return Err(anyhow::anyhow!("Unsupported language: {}", step.language)),
         };
 

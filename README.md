@@ -1,10 +1,11 @@
 # 🚀 Rust Hybrid Workflow Engine
 
-A high-performance, multi-language workflow orchestration engine built in Rust that seamlessly executes Python, Lua, and Shell scripts in complex dependency graphs.
+A high-performance, multi-language workflow orchestration engine built in Rust that seamlessly executes Python, JavaScript/Node.js, Lua, and Shell scripts in complex dependency graphs.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-2024+-blue.svg)](https://www.rust-lang.org)
 [![Python](https://img.shields.io/badge/python-3.6+-green.svg)](https://www.python.org)
+[![JavaScript](https://img.shields.io/badge/javascript-ES6+-yellow.svg)](https://nodejs.org)
 [![Lua](https://img.shields.io/badge/lua-5.4-blue.svg)](https://www.lua.org)
 
 ## 📋 Table of Contents
@@ -24,17 +25,17 @@ A high-performance, multi-language workflow orchestration engine built in Rust t
 
 ## 🌟 Overview
 
-The Rust Hybrid Workflow Engine is a powerful orchestration tool that allows you to define complex multi-step workflows using Lua configuration files. Each step in your workflow can be executed in different programming languages (Python, Lua, Shell), with automatic dependency resolution and data passing between steps.
+The Rust Hybrid Workflow Engine is a powerful orchestration tool that allows you to define complex multi-step workflows using Lua configuration files. Each step in your workflow can be executed in different programming languages (Python, JavaScript/Node.js, Lua, Shell), with automatic dependency resolution and data passing between steps.
 
 Perfect for:
 - **Data Processing Pipelines**: Chain together data fetching, transformation, and storage operations
-- **DevOps Automation**: Combine shell commands, Python scripts, and Lua logic for deployment workflows
+- **DevOps Automation**: Combine shell commands, Python scripts, JavaScript automation, and Lua logic for deployment workflows
 - **Multi-Language Projects**: Leverage the best of each language in a single workflow
 - **Complex Orchestration**: Handle intricate dependency graphs with automatic topological sorting
 
 ## ✨ Key Features
 
-- 🔀 **Multi-Language Support**: Execute Python, Lua, and Shell scripts seamlessly
+- 🔀 **Multi-Language Support**: Execute Python, JavaScript/Node.js, Lua, and Shell scripts seamlessly
 - 📊 **Dependency Management**: Automatic topological sorting of workflow steps
 - 🔄 **Data Flow**: Pass results between steps across different languages
 - 🚀 **High Performance**: Built in Rust for speed and memory safety
@@ -49,6 +50,7 @@ Perfect for:
 - **[Rust](https://www.rust-lang.org/)** (Edition 2024) - Core engine and orchestration
 - **[Lua 5.4](https://www.lua.org/)** - Workflow configuration and scripting
 - **[Python 3.6+](https://www.python.org/)** - Data processing and external integrations
+- **[Node.js](https://nodejs.org/)** - JavaScript runtime for modern web and backend logic
 - **Shell/Bash** - System operations and command execution
 
 ### Dependencies
@@ -63,6 +65,7 @@ Perfect for:
 ### Prerequisites
 - Rust (Edition 2024 or later)
 - Python 3.6+
+- Node.js 14+ (for JavaScript steps)
 - Lua 5.4 (optional, for validation)
 
 ### Installation
@@ -124,8 +127,25 @@ end
 ]]
     },
 
-    save_results = {
+    analyze_data = {
       depends_on = { "process_data" },
+      language = "javascript",
+      code = [[
+function run(inputs) {
+    const processed = inputs.process_data.processed;
+    // Your JavaScript analysis logic
+    const analytics = {
+        count: processed.length,
+        sum: processed.reduce((a, b) => a + b, 0),
+        average: processed.reduce((a, b) => a + b, 0) / processed.length
+    };
+    return { analytics: analytics };
+}
+]]
+    },
+
+    save_results = {
+      depends_on = { "analyze_data" },
       language = "shell",
       code = [[
 #!/bin/bash
@@ -175,8 +195,22 @@ Combines shell commands with Python processing:
 -- System operations → Python analysis → Shell reporting
 ```
 
-### 4. Comprehensive Workflow (`comprehensive_workflow.lua`)
-Complex multi-language pipeline demonstrating all features:
+### 4. JavaScript Workflow (`javascript_workflow.lua`)
+Pure JavaScript/Node.js data processing pipeline:
+```lua
+-- Data generation → JavaScript analytics → Result formatting
+-- Demonstrates modern JavaScript features and JSON processing
+```
+
+### 5. Multi-Language Workflow (`multi_language_workflow.lua`)
+Ultimate demonstration using all supported languages:
+```lua
+-- Python → JavaScript → Lua → Shell → Python
+-- Complete multi-language integration with complex data flow
+```
+
+### 6. Comprehensive Workflow (`comprehensive_workflow.lua`)
+Complex multi-language pipeline demonstrating core features:
 ```lua
 -- Python → Lua → Shell → Python
 -- Full dependency graph with cross-language data flow
@@ -189,9 +223,10 @@ Complex multi-language pipeline demonstrating all features:
 │   Lua Loader    │───▶│ Workflow Engine │───▶│  Step Runners   │
 │                 │    │                 │    │                 │
 │ • Parse .lua    │    │ • Dependency    │    │ • Python Runner │
-│ • Extract steps │    │   Resolution    │    │ • Lua Runner    │
-│ • Validate      │    │ • Execution     │    │ • Shell Runner  │
-│                 │    │   Order         │    │                 │
+│ • Extract steps │    │   Resolution    │    │ • JavaScript    │
+│ • Validate      │    │ • Execution     │    │   Runner        │
+│                 │    │   Order         │    │ • Lua Runner    │
+│                 │    │                 │    │ • Shell Runner  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
@@ -201,6 +236,7 @@ Complex multi-language pipeline demonstrating all features:
 - **Lua Loader (`src/core/lua_loader.rs`)**: Parses and validates Lua workflow files
 - **Runners (`src/runners/`)**: Language-specific execution engines
   - `python_runner.rs` - Python script execution with PyO3
+  - `javascript_runner.rs` - JavaScript/Node.js execution with process spawning
   - `lua_runner.rs` - Lua script execution with MLua
   - `shell_runner.rs` - Shell command execution
 
@@ -232,7 +268,7 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 ## 🗺 Roadmap
 
 ### Phase 1: Core Enhancements (v0.2.0)
-- [ ] **JavaScript/Node.js Runner** - Add JavaScript execution support
+- [x] **JavaScript/Node.js Runner** - ✅ JavaScript execution support with Node.js integration
 - [ ] **WebAssembly Support** - Execute WASM modules as workflow steps
 - [ ] **Configuration Management** - External config files and environment variables
 - [ ] **Improved Error Reporting** - Better error messages with line numbers and context

@@ -34,6 +34,12 @@ fn main() -> anyhow::Result<()> {
         
         println!("\n=== Running comprehensive multi-language workflow ===");
         run_workflow("workflows/comprehensive_workflow.lua")?;
+        
+        println!("\n=== Running JavaScript workflow ===");
+        run_workflow("workflows/javascript_workflow.lua")?;
+        
+        println!("\n=== Running JavaScript integration workflow (Python + JavaScript + Shell) ===");
+        run_workflow("workflows/js_python_shell_workflow.lua")?;
     }
     
     Ok(())
