@@ -9,3 +9,4 @@ mlua = { version = "0.9", features = ["lua54", "vendored"] }
 pyo3 = { version = "0.23", features = ["auto-initialize"] }
 anyhow = "1.0"
 serde_json = "1.0"
+tempfile = "3.0"

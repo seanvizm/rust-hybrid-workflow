@@ -1,6 +1,5 @@
-use crate::lua_loader::{load_workflow, Step};
-use crate::lua_runner::run_lua_step;
-use crate::python_runner::run_python_step;
+use crate::core::lua_loader::{load_workflow, Step};
+use crate::runners::{run_lua_step, run_python_step, run_shell_step};
 use mlua::Lua;
 use std::collections::{HashMap, HashSet};
 
@@ -38,6 +37,7 @@ pub fn run_workflow(path: &str) -> anyhow::Result<()> {
                     return Err(anyhow::anyhow!("Lua workflow context not available"));
                 }
             }
+            "bash" | "shell" | "sh" => run_shell_step(&step.name, &step.code, &inputs)?,
             _ => return Err(anyhow::anyhow!("Unsupported language: {}", step.language)),
         };
 
@@ -213,5 +213,79 @@ workflow = {
         let _ = fs::remove_file(test_file);
 
         assert!(result.is_ok(), "Integration test workflow should run successfully");
+    }
+
+    #[test]
+    fn test_shell_workflow_integration() {
+        // Create a simple test shell workflow file
+        let test_workflow = r#"
+workflow = {
+  name = "shell_integration_test",
+  description = "Shell integration test workflow",
+  steps = {
+    shell_step = {
+      language = "bash",
+      code = [[
+run() {
+    echo '{"status": "completed", "shell_test": true}'
+}
+]]
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_shell_integration.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = run_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok(), "Shell integration test workflow should run successfully");
+    }
+
+    #[test]
+    fn test_multi_language_workflow() {
+        // Test workflow with Lua, Python, and Shell steps
+        let test_workflow = r#"
+workflow = {
+  name = "multi_lang_test",
+  description = "Multi-language test workflow",
+  steps = {
+    lua_step = {
+      run = function()
+        return { from_lua = "test_value" }
+      end
+    },
+    python_step = {
+      depends_on = {"lua_step"},
+      language = "python",
+      code = [[
+def run(inputs):
+    return {"from_python": inputs["lua_step"]["from_lua"] + "_processed"}
+]]
+    },
+    shell_step = {
+      depends_on = {"python_step"},
+      language = "shell",
+      code = [[
+run() {
+    echo '{"from_shell": "final_result", "status": "completed"}'
+}
+]]
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_multi_lang_integration.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = run_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok(), "Multi-language integration test should run successfully");
     }
 }

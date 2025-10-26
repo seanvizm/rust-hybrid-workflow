@@ -1,39 +1,51 @@
-mod engine;
-mod lua_loader;
-mod lua_runner;
-mod python_runner;
+mod core;
+mod runners;
+mod components;
+mod pages;
+mod utils;
+
+use core::run_workflow;
 
 fn main() -> anyhow::Result<()> {
     println!("=== Running hybrid workflow (Python + Lua) ===");
-    engine::run_workflow("workflows/hybrid_workflow.lua")?;
+    run_workflow("workflows/hybrid_workflow.lua")?;
     
     println!("\n=== Running pure Lua workflow ===");
-    engine::run_workflow("workflows/workflow.lua")?;
+    run_workflow("workflows/workflow.lua")?;
+    
+    println!("\n=== Running shell workflow (Shell + Python) ===");
+    run_workflow("workflows/shell_workflow.lua")?;
+    
+    println!("\n=== Running pure shell workflow ===");
+    run_workflow("workflows/pure_shell_workflow.lua")?;
+    
+    println!("\n=== Running comprehensive multi-language workflow ===");
+    run_workflow("workflows/comprehensive_workflow.lua")?;
     
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::core::run_workflow;
     use std::fs;
 
     #[test]
     fn test_hybrid_workflow_execution() {
-        let result = engine::run_workflow("workflows/hybrid_workflow.lua");
+        let result = run_workflow("workflows/hybrid_workflow.lua");
         assert!(result.is_ok(), "Hybrid workflow should execute successfully");
     }
 
     #[test]
     fn test_pure_lua_workflow_execution() {
-        let result = engine::run_workflow("workflows/workflow.lua");
+        let result = run_workflow("workflows/workflow.lua");
         assert!(result.is_ok(), "Pure Lua workflow should execute successfully");
     }
 
     #[test]
     fn test_nonexistent_workflow_file() {
-        let result = engine::run_workflow("workflows/nonexistent.lua");
-        assert!(result.is_err(), "Should fail when workflow file doesn't exist");
+        let result = run_workflow("workflows/nonexistent.lua");
+        assert!(result.is_err(), "Should fail for nonexistent file");
     }
 
     #[test]
@@ -56,7 +68,7 @@ workflow = {
         let test_file = "workflows/test_temp_simple.lua";
         fs::write(test_file, test_workflow_content).expect("Should write test file");
 
-        let result = engine::run_workflow(test_file);
+        let result = run_workflow(test_file);
         
         // Cleanup
         let _ = fs::remove_file(test_file);
@@ -86,7 +98,7 @@ def run():
         let test_file = "workflows/test_temp_python.lua";
         fs::write(test_file, test_workflow_content).expect("Should write test file");
 
-        let result = engine::run_workflow(test_file);
+        let result = run_workflow(test_file);
         
         // Cleanup
         let _ = fs::remove_file(test_file);
@@ -125,7 +137,7 @@ def run(inputs):
         let test_file = "workflows/test_temp_deps.lua";
         fs::write(test_file, test_workflow_content).expect("Should write test file");
 
-        let result = engine::run_workflow(test_file);
+        let result = run_workflow(test_file);
         
         // Cleanup
         let _ = fs::remove_file(test_file);
@@ -146,7 +158,7 @@ workflow = {
         let test_file = "workflows/test_temp_invalid.lua";
         fs::write(test_file, invalid_workflow_content).expect("Should write test file");
 
-        let result = engine::run_workflow(test_file);
+        let result = run_workflow(test_file);
         
         // Cleanup
         let _ = fs::remove_file(test_file);
@@ -184,7 +196,7 @@ def run(inputs):
         let test_file = "workflows/test_temp_mixed.lua";
         fs::write(test_file, mixed_workflow_content).expect("Should write test file");
 
-        let result = engine::run_workflow(test_file);
+        let result = run_workflow(test_file);
         
         // Cleanup
         let _ = fs::remove_file(test_file);

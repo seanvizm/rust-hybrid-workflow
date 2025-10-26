@@ -178,4 +178,86 @@ workflow = {
 
         assert!(result.is_err());
     }
+
+    #[test]
+    fn test_load_shell_workflow() {
+        let test_workflow = r#"
+workflow = {
+  name = "shell_test",
+  description = "Shell test workflow",
+  steps = {
+    shell_step = {
+      language = "bash",
+      code = [[
+run() {
+    echo "Hello from bash"
+    echo '{"result": "success"}'
+}
+]]
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_shell_loader.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = load_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok());
+        let steps = result.unwrap();
+        assert_eq!(steps.len(), 1);
+        assert_eq!(steps[0].name, "shell_step");
+        assert_eq!(steps[0].language, "bash");
+        assert!(steps[0].code.contains("echo \"Hello from bash\""));
+    }
+
+    #[test]
+    fn test_load_mixed_shell_python_workflow() {
+        let test_workflow = r#"
+workflow = {
+  name = "mixed_shell_python_test",
+  description = "Mixed shell and python workflow",
+  steps = {
+    shell_init = {
+      language = "shell",
+      code = [[
+run() {
+    echo '{"data": [1, 2, 3]}'
+}
+]]
+    },
+    python_process = {
+      depends_on = {"shell_init"},
+      language = "python",
+      code = [[
+def run(inputs):
+    data = inputs["shell_init"]["data"]
+    return {"processed": [x * 2 for x in data]}
+]]
+    }
+  }
+}
+"#;
+        let test_file = "workflows/test_mixed_shell_python.lua";
+        fs::write(test_file, test_workflow).expect("Should write test file");
+
+        let result = load_workflow(test_file);
+        
+        // Cleanup
+        let _ = fs::remove_file(test_file);
+
+        assert!(result.is_ok());
+        let steps = result.unwrap();
+        assert_eq!(steps.len(), 2);
+        
+        let shell_step = steps.iter().find(|s| s.name == "shell_init").unwrap();
+        let python_step = steps.iter().find(|s| s.name == "python_process").unwrap();
+        
+        assert_eq!(shell_step.language, "shell");
+        assert_eq!(python_step.language, "python");
+        assert_eq!(python_step.depends_on, vec!["shell_init"]);
+    }
 }
