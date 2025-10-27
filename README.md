@@ -125,7 +125,7 @@ This project is built with **Rust Edition 2024**, leveraging the latest language
 
 ```bash
 # Run a specific workflow file (automatically looks in workflows/ folder)
-cargo run hybrid_workflow.lua
+cargo run workflow_name.lua
 ```
 
 ## 💡 Usage
@@ -276,7 +276,7 @@ Complex multi-language pipeline demonstrating core features:
 │   Lua Loader    │───▶│ Workflow Engine │───▶│  Step Runners   │
 │                 │    │                 │    │                 │
 │ • Parse .lua    │    │ • Dependency    │    │ • Python Runner │
-│ • Extract steps │    │   Resolution    │    │ • JavaScript    │
+│ • Extract steps │    │   Resolution    │    │ • JS/Node.js    │
 │ • Validate      │    │ • Execution     │    │   Runner        │
 │                 │    │   Order         │    │ • WASM Runner   │
 │                 │    │                 │    │ • Lua Runner    │
@@ -333,16 +333,28 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 ### Phase 2: Advanced Features (v0.2.0)
 - [ ] **Configuration Management** - External config files and environment variables
 - [ ] **Improved Error Reporting** - Better error messages with line numbers and context
-- [ ] **Parallel Execution** - Execute independent steps concurrently
+- [ ] **Parallel Execution** - Execute independent steps concurrently (currently sequential)
 - [ ] **Workflow Visualization** - Generate dependency graphs and execution flows
 - [ ] **REST API Interface** - HTTP API for remote workflow execution
-- [ ] **Database Integration** - Built-in connectors for common databases
 
 ### Phase 3: Enterprise Features (v0.3.0)
+- [ ] **Database Integration** - Built-in connectors for common databases
 - [ ] **Workflow Scheduling** - Cron-like scheduling and triggers
 - [ ] **Monitoring & Metrics** - Performance monitoring and observability
 - [ ] **Plugin System** - Custom language runners and extensions
 - [ ] **Distributed Execution** - Multi-node workflow execution
+
+### Phase 3.5: AI & Machine Learning Integration (v0.3.5)
+- [ ] **AI-Powered Workflow Optimization** - Automatic workflow step reordering and parallelization suggestions
+- [ ] **Smart Error Recovery** - AI-driven error pattern recognition and automated retry strategies
+- [ ] **Intelligent Resource Management** - ML-based resource allocation and scaling predictions
+- [ ] **Natural Language Workflow Generation** - Generate workflows from plain English descriptions
+- [ ] **Anomaly Detection** - AI monitoring for unusual execution patterns and performance degradation
+- [ ] **Code Completion & Suggestions** - AI-powered code completion for workflow scripts across languages
+- [ ] **Automated Testing Generation** - AI-generated test cases based on workflow structure and data flow
+- [ ] **Performance Prediction** - ML models to predict execution time and resource requirements
+- [ ] **Smart Data Transformation** - AI-suggested data mapping and transformation between workflow steps
+- [ ] **Workflow Pattern Recognition** - Learn from existing workflows to suggest optimizations and best practices
 
 ### Phase 4: Cloud & Integration (v0.4.0)
 - [ ] **Cloud Connectors** - AWS, GCP, Azure integrations
@@ -412,6 +424,6 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 **[⭐ Star this project](https://github.com/seanvizm/rust-hybrid-workflow)** if you find it useful!
 
-Made with ❤️ by [Sean Vizm](https://github.com/seanvizm)
+Made with ❤️ by [Sean VizM](https://github.com/seanvizm)
 
 </div>
