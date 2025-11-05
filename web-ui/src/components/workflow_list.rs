@@ -9,11 +9,18 @@ pub struct WorkflowInfo {
     pub path: String,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum ViewMode {
+    Table,
+    Grid,
+}
+
 #[component]
 pub fn WorkflowList() -> impl IntoView {
     let (workflows, set_workflows) = create_signal(Vec::<WorkflowInfo>::new());
     let (loading, set_loading) = create_signal(true);
     let (error, set_error) = create_signal(None::<String>);
+    let (view_mode, set_view_mode) = create_signal(ViewMode::Table);
 
     // Load workflows on mount
     create_effect(move |_| {
@@ -34,8 +41,40 @@ pub fn WorkflowList() -> impl IntoView {
     view! {
         <div class="workflow-list-container">
             <div class="page-header">
-                <h2>"📋 Available Workflows"</h2>
-                <p>"Select a workflow to run and view its execution steps"</p>
+                <div class="header-content">
+                    <div>
+                        <h2>"📋 Available Workflows"</h2>
+                        <p>"Select a workflow to run and view its execution steps"</p>
+                    </div>
+                    <div class="view-toggle">
+                        <button
+                            class=move || {
+                                if view_mode.get() == ViewMode::Table {
+                                    "view-btn active"
+                                } else {
+                                    "view-btn"
+                                }
+                            }
+                            on:click=move |_| set_view_mode.set(ViewMode::Table)
+                            title="Table View"
+                        >
+                            "☰"
+                        </button>
+                        <button
+                            class=move || {
+                                if view_mode.get() == ViewMode::Grid {
+                                    "view-btn active"
+                                } else {
+                                    "view-btn"
+                                }
+                            }
+                            on:click=move |_| set_view_mode.set(ViewMode::Grid)
+                            title="Grid View"
+                        >
+                            "▦"
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <Show
@@ -46,15 +85,24 @@ pub fn WorkflowList() -> impl IntoView {
                             when=move || error.get().is_some()
                             fallback=move || {
                                 view! {
-                                    <div class="workflows-grid">
-                                        <For
-                                            each=move || workflows.get()
-                                            key=|w| w.name.clone()
-                                            children=move |workflow: WorkflowInfo| {
-                                                view! { <WorkflowCard workflow=workflow/> }
+                                    <Show
+                                        when=move || view_mode.get() == ViewMode::Table
+                                        fallback=move || {
+                                            view! {
+                                                <div class="workflows-grid">
+                                                    <For
+                                                        each=move || workflows.get()
+                                                        key=|w| w.name.clone()
+                                                        children=move |workflow: WorkflowInfo| {
+                                                            view! { <WorkflowCard workflow=workflow/> }
+                                                        }
+                                                    />
+                                                </div>
                                             }
-                                        />
-                                    </div>
+                                        }
+                                    >
+                                        <WorkflowTable workflows=workflows/>
+                                    </Show>
                                 }
                             }
                         >
@@ -70,6 +118,55 @@ pub fn WorkflowList() -> impl IntoView {
                     <p>"Loading workflows..."</p>
                 </div>
             </Show>
+        </div>
+    }
+}
+
+#[component]
+fn WorkflowTable(workflows: ReadSignal<Vec<WorkflowInfo>>) -> impl IntoView {
+    view! {
+        <div class="workflow-table-container">
+            <table class="workflow-table">
+                <thead>
+                    <tr>
+                        <th>"Name"</th>
+                        <th>"Description"</th>
+                        <th>"Type"</th>
+                        <th>"Path"</th>
+                        <th>"Actions"</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <For
+                        each=move || workflows.get()
+                        key=|w| w.name.clone()
+                        children=move |workflow: WorkflowInfo| {
+                            let name = workflow.name.clone();
+                            let navigate_url = format!("/workflow/{}", name);
+                            view! {
+                                <tr class="workflow-row">
+                                    <td class="workflow-name">{workflow.display_name.clone()}</td>
+                                    <td class="workflow-description">
+                                        {workflow
+                                            .description
+                                            .clone()
+                                            .unwrap_or_else(|| "No description available".to_string())}
+                                    </td>
+                                    <td>
+                                        <span class="workflow-badge-small">"Lua"</span>
+                                    </td>
+                                    <td class="workflow-path">{workflow.path.clone()}</td>
+                                    <td>
+                                        <a href=navigate_url class="btn btn-sm btn-primary">
+                                            "▶ Run"
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    />
+                </tbody>
+            </table>
         </div>
     }
 }

@@ -33,6 +33,19 @@ body {
     padding: 2rem;
 }
 
+/* Workflow List Container - Full Width with Dynamic Margins */
+.workflow-list-container {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0 clamp(1rem, 3vw, 3rem);
+}
+
+.workflow-list-container .page-header {
+    margin-bottom: 2rem;
+    padding: 0;
+}
+
 /* Header */
 .header {
     text-align: center;
@@ -58,6 +71,12 @@ body {
     margin-bottom: 2rem;
 }
 
+.page-header .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
 .page-header h2 {
     font-size: 1.875rem;
     margin-bottom: 0.5rem;
@@ -65,6 +84,35 @@ body {
 
 .page-header p {
     color: var(--text-secondary);
+}
+
+/* View Toggle Buttons */
+.view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.view-btn {
+    background: var(--card-bg);
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    font-size: 1.25rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.view-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
 }
 
 /* Loading Spinner */
@@ -105,6 +153,88 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     gap: 1.5rem;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Workflow Table */
+.workflow-table-container {
+    background: var(--card-bg);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+    overflow-y: visible;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    margin: 0 auto;
+}
+
+.workflow-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.workflow-table thead {
+    background: var(--bg-color);
+}
+
+.workflow-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.workflow-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.workflow-table tbody tr:hover {
+    background: var(--bg-color);
+}
+
+.workflow-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.workflow-table td {
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.workflow-table .workflow-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+    white-space: nowrap;
+}
+
+.workflow-table .workflow-description {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.workflow-table .workflow-path {
+    font-family: 'Courier New', monospace;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.workflow-badge-small {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    display: inline-block;
 }
 
 /* Workflow Card */
@@ -207,6 +337,11 @@ body {
 .btn-large {
     padding: 1rem 2rem;
     font-size: 1.125rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
 }
 
 .btn:active {
@@ -636,5 +771,21 @@ body {
 
     .not-found-message {
         font-size: 1rem;
+    }
+
+    .workflow-list-container {
+        padding: 0 1rem;
+    }
+
+    .page-header .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .workflow-table th,
+    .workflow-table td {
+        padding: 0.625rem 0.75rem;
+        font-size: 0.8125rem;
     }
 }
