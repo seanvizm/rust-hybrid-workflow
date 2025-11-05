@@ -246,9 +246,63 @@ fn StepCard(
             <Show when=is_expanded>
                 <div class="step-output">
                     <h4>"Output:"</h4>
-                    <pre class="output-content">
-                        {step.output.clone().unwrap_or_else(|| "No output".to_string())}
-                    </pre>
+                    {
+                        let output = step.output.clone().unwrap_or_else(|| "No output".to_string());
+                        let trimmed = output.trim();
+                        
+                        // Try to parse as JSON first
+                        let parsed_output = if let Ok(json_value) = serde_json::from_str::<serde_json::Value>(&trimmed) {
+                            // Check if it's a simple string wrapped in quotes
+                            if let Some(s) = json_value.as_str() {
+                                // It's a JSON string, unwrap it
+                                s.to_string()
+                            } else {
+                                // It's a complex JSON (object or array), keep as is
+                                output.clone()
+                            }
+                        } else {
+                            // Not valid JSON, use as is
+                            output.clone()
+                        };
+                        
+                        // Now detect the format of the unwrapped output
+                        let final_trimmed = parsed_output.trim();
+                        let is_json = (final_trimmed.starts_with('{') && final_trimmed.ends_with('}')) || 
+                                     (final_trimmed.starts_with('[') && final_trimmed.ends_with(']'));
+                        
+                        if is_json {
+                            // Try to parse and prettify JSON
+                            match serde_json::from_str::<serde_json::Value>(&final_trimmed) {
+                                Ok(value) => {
+                                    let prettified = serde_json::to_string_pretty(&value)
+                                        .unwrap_or_else(|_| parsed_output.clone());
+                                    view! {
+                                        <div>
+                                            <div class="output-format-badge">"JSON"</div>
+                                            <pre class="output-content output-json">{prettified}</pre>
+                                        </div>
+                                    }.into_view()
+                                }
+                                Err(_) => {
+                                    // Not valid JSON, treat as Text/HTML
+                                    view! {
+                                        <div>
+                                            <div class="output-format-badge output-format-badge-text">"Text / HTML"</div>
+                                            <div class="output-content output-html-text" inner_html=parsed_output.clone()></div>
+                                        </div>
+                                    }.into_view()
+                                }
+                            }
+                        } else {
+                            // Not JSON - render as HTML (text will display as-is)
+                            view! {
+                                <div>
+                                    <div class="output-format-badge output-format-badge-text">"Text / HTML"</div>
+                                    <div class="output-content output-html-text" inner_html=parsed_output></div>
+                                </div>
+                            }.into_view()
+                        }
+                    }
                 </div>
             </Show>
         </div>

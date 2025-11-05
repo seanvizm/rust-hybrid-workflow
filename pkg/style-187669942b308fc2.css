@@ -432,7 +432,97 @@ body {
     font-size: 0.875rem;
     line-height: 1.5;
     overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px;
     border: 1px solid var(--border-color);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Output Format Badge */
+.output-format-badge {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.output-format-badge-text {
+    background: var(--text-secondary);
+}
+
+/* JSON Output Styling */
+.output-json {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1.25rem;
+    border-radius: 0.5rem;
+}
+
+/* HTML Output Styling */
+.output-html {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.output-html-preview {
+    margin-bottom: 1rem;
+}
+
+.output-html-preview details {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    cursor: pointer;
+}
+
+.output-html-preview summary {
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.output-html-preview summary:hover {
+    color: var(--primary-hover);
+}
+
+.html-render {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    background: white;
+    min-height: 100px;
+}
+
+/* Plain Text Output */
+.output-plain {
+    background: #f8f9fa;
+    color: #333;
+}
+
+/* Text/HTML Output - Combined format */
+.output-html-text {
+    background: white;
+    padding: 1rem;
+    border-radius: 0.25rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 400px;
+    border: 1px solid var(--border-color);
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 /* Error Message */

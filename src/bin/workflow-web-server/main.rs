@@ -12,8 +12,6 @@ use std::path::PathBuf;
 use std::time::Instant;
 use tower_http::services::ServeDir;
 
-// Use the library from this crate
-use workflow_engine::run_workflow;
 use api::{ExecutionStatus, StepStatus, WorkflowExecution, WorkflowInfo, WorkflowStep};
 
 #[tokio::main]
@@ -103,15 +101,14 @@ async fn run_workflow_handler(
 
     let start_time = Instant::now();
     
-    // For now, we'll create a simplified execution result
-    // In a real implementation, you'd want to capture step-by-step output
-    match run_workflow(&workflow_path) {
-        Ok(_) => {
+    // Execute workflow and capture step-by-step results
+    match execute_workflow_with_tracking(&workflow_path) {
+        Ok(steps) => {
             let duration = start_time.elapsed();
             let execution = WorkflowExecution {
                 workflow_name: name.clone(),
                 status: ExecutionStatus::Completed,
-                steps: extract_steps_from_workflow(&workflow_path),
+                steps,
                 total_duration_ms: Some(duration.as_millis() as u64),
                 error: None,
             };
@@ -122,7 +119,7 @@ async fn run_workflow_handler(
             let execution = WorkflowExecution {
                 workflow_name: name.clone(),
                 status: ExecutionStatus::Failed,
-                steps: extract_steps_from_workflow(&workflow_path),
+                steps: vec![],
                 total_duration_ms: Some(duration.as_millis() as u64),
                 error: Some(e.to_string()),
             };
@@ -168,54 +165,101 @@ fn extract_workflow_info(path: &PathBuf) -> (String, Option<String>) {
     }
 }
 
-fn extract_steps_from_workflow(path: &str) -> Vec<WorkflowStep> {
-    // This is a simplified version. In production, you'd want to actually
-    // parse the Lua file and track real execution
-    if let Ok(content) = fs::read_to_string(path) {
-        let mut steps = Vec::new();
-        let mut step_number = 1;
+fn execute_workflow_with_tracking(path: &str) -> anyhow::Result<Vec<WorkflowStep>> {
+    use workflow_engine::core::lua_loader::load_workflow;
+    use workflow_engine::runners::{run_lua_step, run_python_step, run_shell_step};
+    use std::collections::HashMap;
+    use std::time::Instant;
 
-        // Simple regex-like parsing for step names
-        for line in content.lines() {
-            if line.trim_start().starts_with("-- Step") || 
-               (line.contains("=") && line.contains("{") && !line.contains("workflow")) {
-                if let Some(step_name) = extract_step_name(line) {
-                    let language = extract_language(&content, &step_name);
-                    steps.push(WorkflowStep {
-                        step_number,
-                        name: step_name,
-                        language,
-                        output: Some("Step executed successfully".to_string()),
-                        status: StepStatus::Success,
-                        duration_ms: Some((step_number * 100) as u64), // Mock duration
-                    });
-                    step_number += 1;
-                }
+    let mut workflow_steps = load_workflow(path)?;
+    let mut results: HashMap<String, serde_json::Value> = HashMap::new();
+    let mut tracked_steps = Vec::new();
+
+    // Sort steps by dependencies (using the same logic as the engine)
+    workflow_steps = sort_steps_for_execution(workflow_steps)?;
+
+    for (step_index, step) in workflow_steps.iter().enumerate() {
+        let step_number = step_index + 1;
+        let step_start = Instant::now();
+        
+        let mut inputs = HashMap::new();
+        for dep in &step.depends_on {
+            if let Some(val) = results.get(dep) {
+                inputs.insert(dep.clone(), val.clone());
             }
         }
 
-        steps
-    } else {
-        vec![]
-    }
-}
+        let result = match step.language.as_str() {
+            "python" => run_python_step(&step.name, &step.code, &inputs),
+            "lua" => run_lua_step(&step.name, &step.code, &inputs),
+            "bash" | "shell" | "sh" => run_shell_step(&step.name, &step.code, &inputs),
+            _ => Err(anyhow::anyhow!("Unsupported language: {}", step.language)),
+        };
 
-fn extract_step_name(line: &str) -> Option<String> {
-    if let Some(pos) = line.find('=') {
-        let name = line[..pos].trim();
-        if !name.is_empty() && name != "workflow" && name != "steps" {
-            return Some(name.to_string());
+        let duration = step_start.elapsed();
+
+        match result {
+            Ok(output) => {
+                let output_str = output.to_string();
+                results.insert(step.name.clone(), output);
+                
+                tracked_steps.push(WorkflowStep {
+                    step_number,
+                    name: step.name.clone(),
+                    language: step.language.clone(),
+                    output: Some(output_str),
+                    status: StepStatus::Success,
+                    duration_ms: Some(duration.as_millis() as u64),
+                });
+            }
+            Err(e) => {
+                tracked_steps.push(WorkflowStep {
+                    step_number,
+                    name: step.name.clone(),
+                    language: step.language.clone(),
+                    output: Some(format!("Error: {}", e)),
+                    status: StepStatus::Failed,
+                    duration_ms: Some(duration.as_millis() as u64),
+                });
+                return Err(e);
+            }
         }
     }
-    None
+
+    Ok(tracked_steps)
 }
 
-fn extract_language(content: &str, step_name: &str) -> String {
-    content
-        .lines()
-        .skip_while(|line| !line.contains(step_name))
-        .take_while(|line| !line.trim().starts_with('}'))
-        .find(|line| line.contains("language ="))
-        .and_then(|line| line.split('"').nth(1).map(|s| s.to_string()))
-        .unwrap_or_else(|| "lua".to_string())
+fn sort_steps_for_execution(steps: Vec<workflow_engine::core::lua_loader::Step>) -> anyhow::Result<Vec<workflow_engine::core::lua_loader::Step>> {
+    use std::collections::{HashMap, HashSet};
+    
+    let mut sorted = Vec::new();
+    let mut remaining: HashMap<String, workflow_engine::core::lua_loader::Step> = 
+        steps.into_iter().map(|s| (s.name.clone(), s)).collect();
+    let mut processed: HashSet<String> = HashSet::new();
+    
+    while !remaining.is_empty() {
+        let mut progress = false;
+        let mut to_remove = Vec::new();
+        
+        for (name, step) in &remaining {
+            let can_process = step.depends_on.iter().all(|dep| processed.contains(dep));
+            
+            if can_process {
+                sorted.push(step.clone());
+                processed.insert(name.clone());
+                to_remove.push(name.clone());
+                progress = true;
+            }
+        }
+        
+        for name in to_remove {
+            remaining.remove(&name);
+        }
+        
+        if !progress {
+            return Err(anyhow::anyhow!("Circular dependency detected"));
+        }
+    }
+    
+    Ok(sorted)
 }
