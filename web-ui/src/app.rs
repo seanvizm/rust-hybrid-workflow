@@ -2,7 +2,7 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
-use crate::components::{WorkflowList, WorkflowRunner};
+use crate::components::{WorkflowList, WorkflowRunner, NotFound};
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -26,6 +26,7 @@ pub fn App() -> impl IntoView {
                 <Routes>
                     <Route path="/" view=WorkflowList/>
                     <Route path="/workflow/:name" view=WorkflowRunner/>
+                    <Route path="/*any" view=NotFound/>
                 </Routes>
             </main>
         </Router>
