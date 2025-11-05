@@ -154,9 +154,14 @@ Then open your browser:
 Features:
 - 📋 Browse all workflows in a visual grid
 - ▶️ One-click workflow execution
-- 📊 Real-time step-by-step results
+- 📊 Real-time step-by-step results with smart output formatting
+- 🎨 Automatic output type detection and rendering:
+  - **JSON**: Prettified with syntax highlighting and dark theme
+  - **HTML**: Rendered directly (e.g., `<b>bold</b>` displays as **bold**)
+  - **Text**: Monospaced display with scrollable container
 - 🔄 Hot reload during development
 - 📱 Responsive mobile-friendly design
+- 🎯 Format badges showing output type (JSON/Text/HTML)
 
 See [docs/WEB_UI.md](docs/WEB_UI.md) for complete documentation.
 
@@ -371,8 +376,9 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
   - ✅ Workflow list view with one-click execution
   - ✅ Real-time step-by-step execution results
   - ✅ Hot reload support for development
-  - ✅ Responsive design with mystical blue theme
+  - ✅ Responsive design with mobile-friendly design
   - ✅ 404 error handling
+  - ✅ Format step return data, rendering output type (JSON/Text/HTML) appropriately.
 - [ ] **Workflow Visualization** - Generate dependency graphs (execution flow visualization implemented)
 
 ### Phase 3: Enterprise Features (v0.3.0)
