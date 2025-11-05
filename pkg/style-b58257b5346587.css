@@ -1,7 +1,7 @@
 /* Global Styles */
 :root {
-    --primary-color: #4f46e5;
-    --primary-hover: #4338ca;
+    --primary-color: #1e40af;
+    --primary-hover: #1e3a8a;
     --success-color: #10b981;
     --error-color: #ef4444;
     --warning-color: #f59e0b;
@@ -38,9 +38,9 @@ body {
     text-align: center;
     margin-bottom: 3rem;
     padding: 2rem;
-    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    background: linear-gradient(135deg, #1e40af, #3b82f6, #06b6d4);
     color: white;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     box-shadow: var(--shadow-lg);
 }
 

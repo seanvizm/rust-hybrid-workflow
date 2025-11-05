@@ -9,3 +9,9 @@ ignore = ["../pkg"]
 port = 8080
 address = "127.0.0.1"
 open = false
+ws_protocol = "ws"
+
+# Proxy only API requests to backend server
+[[proxy]]
+backend = "http://localhost:3000/api"
+rewrite = "/api"
