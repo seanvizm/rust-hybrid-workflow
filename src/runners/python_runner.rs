@@ -8,7 +8,7 @@ pub fn run_python_step(
     code: &str,
     inputs: &HashMap<String, serde_json::Value>,
 ) -> anyhow::Result<serde_json::Value> {
-    Python::with_gil(|py| {
+    Python::attach(|py| {
         let locals = PyDict::new(py);
         
         // Convert inputs HashMap to Python dict using Python's json module
