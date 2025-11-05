@@ -167,7 +167,7 @@ fn extract_workflow_info(path: &PathBuf) -> (String, Option<String>) {
 
 fn execute_workflow_with_tracking(path: &str) -> anyhow::Result<Vec<WorkflowStep>> {
     use workflow_engine::core::lua_loader::load_workflow;
-    use workflow_engine::runners::{run_lua_step, run_python_step, run_shell_step};
+    use workflow_engine::runners::{run_lua_step, run_python_step, run_shell_step, run_javascript_step, run_wasm_step};
     use std::collections::HashMap;
     use std::time::Instant;
 
@@ -193,6 +193,12 @@ fn execute_workflow_with_tracking(path: &str) -> anyhow::Result<Vec<WorkflowStep
             "python" => run_python_step(&step.name, &step.code, &inputs),
             "lua" => run_lua_step(&step.name, &step.code, &inputs),
             "bash" | "shell" | "sh" => run_shell_step(&step.name, &step.code, &inputs),
+            "javascript" | "js" | "node" | "nodejs" => run_javascript_step(&step.name, &step.code, &inputs),
+            "wasm" | "webassembly" => {
+                let module_path = step.module_path.as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("WASM step '{}' missing 'module' field", step.name))?;
+                run_wasm_step(&step.name, module_path, step.function_name.as_deref(), &inputs)
+            }
             _ => Err(anyhow::anyhow!("Unsupported language: {}", step.language)),
         };
 
