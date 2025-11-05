@@ -1,0 +1,21 @@
+[package]
+name = "workflow-web-ui"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+# Don't depend on the parent crate - it has WASM-incompatible dependencies
+# hybrid-workflow-engine = { path = "..", features = ["web-ui"] }
+leptos = { version = "0.6", features = ["csr"] }
+leptos_meta = { version = "0.6", features = ["csr"] }
+leptos_router = { version = "0.6", features = ["csr"] }
+server_fn = { version = "0.6", features = ["browser"], default-features = false }
+console_error_panic_hook = "0.1"
+wasm-bindgen = "0.2"
+gloo-net = "0.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

@@ -1,0 +1,11 @@
+[build]
+target = "index.html"
+dist = "../pkg"
+
+[watch]
+ignore = ["../pkg"]
+
+[serve]
+port = 8080
+address = "127.0.0.1"
+open = false

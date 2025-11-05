@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hybrid Workflow Engine</title>
+    <link rel="stylesheet" href="/workflow-web-5d2641105415ad51.css" integrity="sha384-DR4o92NQxYwoVx5yBLnfaG55QOeBilDNb8n+SlkY0Sr96YxEzapq0v+LHaMr/wDx"/>
+<link rel="modulepreload" href="/workflow-web-ui-7c39d9994060ddbe.js" crossorigin="anonymous" integrity="sha384-9iNXt66UOIem1rFLFwBvr6U9L8m7NRoGJaNdfKYs8zU2cm47qdwT2oTaS98SSsov"><link rel="preload" href="/workflow-web-ui-7c39d9994060ddbe_bg.wasm" crossorigin="anonymous" integrity="sha384-1N+y5KSAKU6DszJAxy6DhZ609ITk71zfQbriMkrEFTWLYqWwNhMbiw4a0XlyIqej" as="fetch" type="application/wasm"></head>
+<body>
+    <div id="app"></div>
+
+<script type="module">
+import init, * as bindings from '/workflow-web-ui-7c39d9994060ddbe.js';
+const wasm = await init({ module_or_path: '/workflow-web-ui-7c39d9994060ddbe_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>
