@@ -42,9 +42,11 @@ Perfect for:
 - 🔄 **Data Flow**: Pass results between steps across different languages
 - 🚀 **High Performance**: Built in Rust for speed and memory safety
 - 📝 **Declarative Configuration**: Define workflows using intuitive Lua syntax
+- 🌐 **Web UI**: Interactive Leptos-based interface with real-time execution visualization and hot reload
+- 🔌 **REST API**: HTTP endpoints for remote workflow execution and management
 - 🧪 **Comprehensive Testing**: Built-in test suite with validation tools
 - 🔧 **Error Handling**: Robust error reporting and recovery mechanisms
-- 📦 **Easy Integration**: Simple command-line interface and library usage
+- 📦 **Easy Integration**: Command-line interface, library usage, and web interface
 
 ## 🛠 Tech Stack
 
@@ -54,12 +56,17 @@ Perfect for:
 - **[Python 3.6+](https://www.python.org/)** - Data processing and external integrations
 - **[Node.js](https://nodejs.org/)** - JavaScript runtime for modern web and backend logic
 - **[WebAssembly](https://webassembly.org/)** - High-performance, secure code execution
+- **[Leptos](https://leptos.dev/)** (0.6) - Reactive web framework for the UI frontend
+- **[Axum](https://github.com/tokio-rs/axum)** (0.8) - Web server framework for REST API
 - **Shell/Bash** - System operations and command execution
 
 ### Dependencies
 - **[mlua](https://crates.io/crates/mlua)** (0.9) - Lua integration with Rust
 - **[pyo3](https://crates.io/crates/pyo3)** (0.23) - Python integration with auto-initialization
 - **[wasmtime](https://crates.io/crates/wasmtime)** (26.0) - WebAssembly runtime for Rust
+- **[leptos](https://crates.io/crates/leptos)** (0.6) - WebAssembly frontend framework
+- **[axum](https://crates.io/crates/axum)** (0.8) - HTTP server and REST API
+- **[trunk](https://trunkrs.dev/)** - WASM build tool and dev server with hot reload
 - **[anyhow](https://crates.io/crates/anyhow)** (1.0) - Error handling and context
 - **[serde_json](https://crates.io/crates/serde_json)** (1.0) - JSON serialization for data exchange
 - **[tempfile](https://crates.io/crates/tempfile)** (3.0) - Temporary file management
@@ -127,6 +134,31 @@ This project is built with **Rust Edition 2024**, leveraging the latest language
 # Run a specific workflow file (automatically looks in workflows/ folder)
 cargo run workflow_name.lua
 ```
+
+### Web UI
+
+For an interactive web interface with real-time execution visualization:
+
+```bash
+# Production mode
+./run_web_ui.sh
+
+# Development mode (with hot reload)
+./run_web_ui_dev.sh
+```
+
+Then open your browser:
+- **Production**: http://localhost:3000
+- **Development**: http://localhost:8080
+
+Features:
+- 📋 Browse all workflows in a visual grid
+- ▶️ One-click workflow execution
+- 📊 Real-time step-by-step results
+- 🔄 Hot reload during development
+- 📱 Responsive mobile-friendly design
+
+See [docs/WEB_UI.md](docs/WEB_UI.md) for complete documentation.
 
 ## 💡 Usage
 
@@ -334,8 +366,14 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 - [ ] **Configuration Management** - External config files and environment variables
 - [ ] **Improved Error Reporting** - Better error messages with line numbers and context
 - [ ] **Parallel Execution** - Execute independent steps concurrently (currently sequential)
-- [ ] **Workflow Visualization** - Generate dependency graphs and execution flows
-- [ ] **REST API Interface** - HTTP API for remote workflow execution
+- [x] **REST API Interface** - ✅ HTTP API for remote workflow execution with Axum backend
+- [x] **Web UI** - ✅ Interactive Leptos-based web interface for workflow management
+  - ✅ Workflow list view with one-click execution
+  - ✅ Real-time step-by-step execution results
+  - ✅ Hot reload support for development
+  - ✅ Responsive design with mystical blue theme
+  - ✅ 404 error handling
+- [ ] **Workflow Visualization** - Generate dependency graphs (execution flow visualization implemented)
 
 ### Phase 3: Enterprise Features (v0.3.0)
 - [ ] **Database Integration** - Built-in connectors for common databases
