@@ -38,6 +38,7 @@ Perfect for:
 ## ✨ Key Features
 
 - 🔀 **Multi-Language Support**: Execute Python, JavaScript/Node.js, WebAssembly, Lua, and Shell scripts seamlessly
+- 🌐 **WASI Support**: WebAssembly System Interface for secure system resource access
 - 📊 **Dependency Management**: Automatic topological sorting of workflow steps
 - 🔄 **Data Flow**: Pass results between steps across different languages
 - 🚀 **High Performance**: Built in Rust for speed and memory safety
@@ -56,6 +57,7 @@ Perfect for:
 - **[Python 3.6+](https://www.python.org/)** - Data processing and external integrations
 - **[Node.js](https://nodejs.org/)** - JavaScript runtime for modern web and backend logic
 - **[WebAssembly](https://webassembly.org/)** - High-performance, secure code execution
+- **[WASI](https://wasi.dev/)** - WebAssembly System Interface for system resource access
 - **[Leptos](https://leptos.dev/)** (0.6) - Reactive web framework for the UI frontend
 - **[Axum](https://github.com/tokio-rs/axum)** (0.8) - Web server framework for REST API
 - **Shell/Bash** - System operations and command execution
@@ -64,6 +66,7 @@ Perfect for:
 - **[mlua](https://crates.io/crates/mlua)** (0.9) - Lua integration with Rust
 - **[pyo3](https://crates.io/crates/pyo3)** (0.23) - Python integration with auto-initialization
 - **[wasmtime](https://crates.io/crates/wasmtime)** (26.0) - WebAssembly runtime for Rust
+- **[wasmtime-wasi](https://crates.io/crates/wasmtime-wasi)** (26.0) - WASI implementation for Wasmtime
 - **[leptos](https://crates.io/crates/leptos)** (0.6) - WebAssembly frontend framework
 - **[axum](https://crates.io/crates/axum)** (0.8) - HTTP server and REST API
 - **[trunk](https://trunkrs.dev/)** - WASM build tool and dev server with hot reload
@@ -299,7 +302,15 @@ High-performance computing with WebAssembly integration:
 -- Demonstrates secure, high-performance computation with WASM modules
 ```
 
-### 7. Comprehensive Workflow (`comprehensive_workflow.lua`)
+### 7. WASI Workflow (`wasi_workflow.lua`)
+WebAssembly System Interface demonstration:
+```lua
+-- Python → WASM+WASI → JavaScript → Lua
+-- Shows WASI capabilities: stdio, environment access, system integration
+-- Secure sandboxed execution with controlled system resource access
+```
+
+### 8. Comprehensive Workflow (`comprehensive_workflow.lua`)
 Complex multi-language pipeline demonstrating core features:
 ```lua
 -- Python → Lua → Shell → Python

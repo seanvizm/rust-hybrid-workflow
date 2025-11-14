@@ -16,6 +16,7 @@ anyhow = "1.0"
 serde_json = "1.0"
 tempfile = { version = "3.0", optional = true }
 wasmtime = { version = "26.0", optional = true }
+wasmtime-wasi = { version = "26.0", optional = true }
 chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 
@@ -35,9 +36,9 @@ tower-http = { version = "0.6", features = ["fs"], optional = true }
 
 [features]
 default = ["cli"]
-cli = ["mlua", "pyo3", "tempfile", "wasmtime"]
+cli = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi"]
 web-ui = ["leptos", "leptos_meta", "leptos_router", "console_error_panic_hook", "wasm-bindgen", "gloo-net"]
-web-server = ["mlua", "pyo3", "tempfile", "wasmtime", "axum", "tokio", "tower", "tower-http"]
+web-server = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "axum", "tokio", "tower", "tower-http"]
 
 [[bin]]
 name = "hybrid-workflow-engine"

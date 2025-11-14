@@ -2,6 +2,10 @@ use std::collections::HashMap;
 use std::path::Path;
 use wasmtime::*;
 
+// Note: WASI support can be enabled by uncommenting the wasmtime-wasi imports
+// and updating the code below. See docs/WASI.md for implementation guide.
+// use wasmtime_wasi::WasiCtxBuilder;
+
 pub fn run_wasm_step(
     _name: &str,
     module_path: &str,
@@ -17,6 +21,21 @@ pub fn run_wasm_step(
     }
 
     // Create WASM engine and store
+    //
+    // WASI SUPPORT: To enable WASI (WebAssembly System Interface), uncomment below:
+    // let mut config = Config::new();
+    // let engine = Engine::new(&config)?;
+    // let wasi_ctx = WasiCtxBuilder::new()
+    //     .inherit_stdio()
+    //     .inherit_args()?
+    //     .inherit_env()?
+    //     .build();
+    // let mut store = Store::new(&engine, wasi_ctx);
+    // let mut linker = Linker::new(&engine);
+    // wasmtime_wasi::add_to_linker(&mut linker, |ctx| ctx)?;
+    // let instance = linker.instantiate(&mut store, &module)?;
+    //
+    // For now, using basic WASM without WASI:
     let engine = Engine::default();
     let mut store = Store::new(&engine, ());
 

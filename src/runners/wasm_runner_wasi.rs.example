@@ -1,0 +1,128 @@
+// WASI-Enabled WASM Runner Example
+// This file shows how to enable WASI support in the WASM runner
+// 
+// To use this instead of the default wasm_runner.rs:
+// 1. Copy this file content to replace wasm_runner.rs
+// 2. Ensure wasmtime-wasi is in your Cargo.toml dependencies
+// 3. Rebuild the project
+
+use std::collections::HashMap;
+use std::path::Path;
+use wasmtime::*;
+use wasmtime_wasi::sync::WasiCtxBuilder;
+
+pub fn run_wasm_step(
+    _name: &str,
+    module_path: &str,
+    function_name: Option<&str>,
+    inputs: &HashMap<String, serde_json::Value>,
+) -> anyhow::Result<serde_json::Value> {
+    // Check if WASM module file exists
+    if !Path::new(module_path).exists() {
+        return Err(anyhow::anyhow!(
+            "WASM module file not found: {}. Please ensure the .wasm file exists.",
+            module_path
+        ));
+    }
+
+    // Create WASM engine
+    let engine = Engine::default();
+    
+    // Build WASI context with system interface capabilities
+    let wasi = WasiCtxBuilder::new()
+        .inherit_stdio()    // Allow WASM to use stdin/stdout/stderr
+        .inherit_args()?    // Pass command-line arguments
+        .inherit_env()?     // Pass environment variables
+        .build();
+    
+    let mut store = Store::new(&engine, wasi);
+
+    // Create a linker to link WASI functions
+    let mut linker = Linker::new(&engine);
+    
+    // Add WASI functions to the linker
+    wasmtime_wasi::sync::add_to_linker(&mut linker, |s| s)?;
+
+    // Load the WASM module
+    let module = Module::from_file(&engine, module_path)
+        .map_err(|e| anyhow::anyhow!("Failed to load WASM module '{}': {}", module_path, e))?;
+
+    // Create instance with WASI support
+    let instance = linker.instantiate(&mut store, &module)
+        .map_err(|e| anyhow::anyhow!("Failed to instantiate WASM module '{}': {}", module_path, e))?;
+
+    // Determine which function to call
+    let func_name = function_name.unwrap_or("_start");  // WASI modules use _start as entry point
+    
+    // For WASI modules, we typically call _start with no arguments
+    if func_name == "_start" {
+        let start = instance
+            .get_typed_func::<(), ()>(&mut store, "_start")
+            .map_err(|e| anyhow::anyhow!(
+                "Function '_start' not found in WASI module '{}': {}", 
+                module_path, 
+                e
+            ))?;
+        
+        println!("Executing WASI module '{}'", module_path);
+        println!("Input data available: {} items", inputs.len());
+        
+        start.call(&mut store, ())?;
+        
+        // WASI modules typically print to stdout and don't return data
+        // So we create a success result
+        Ok(serde_json::json!({
+            "wasm_execution": {
+                "module": module_path,
+                "function": func_name,
+                "wasi_enabled": true,
+                "status": "success",
+                "message": "WASI module executed successfully",
+                "capabilities": [
+                    "stdio_access",
+                    "environment_variables",
+                    "command_line_arguments"
+                ]
+            }
+        }))
+    } else {
+        // For custom functions, try to get them
+        let func = instance
+            .get_typed_func::<(), i32>(&mut store, func_name)
+            .map_err(|e| anyhow::anyhow!(
+                "Function '{}' not found in WASM module '{}'Available exports: {:?}. Error: {}", 
+                func_name, 
+                module_path,
+                instance.exports(&mut store).map(|e| e.name()).collect::<Vec<_>>(),
+                e
+            ))?;
+
+        println!("Executing WASI function '{}' from module '{}'", func_name, module_path);
+        
+        let result = func.call(&mut store, ())?;
+        
+        Ok(serde_json::json!({
+            "wasm_execution": {
+                "module": module_path,
+                "function": func_name,
+                "return_code": result,
+                "wasi_enabled": true,
+                "status": if result == 0 { "success" } else { "error" }
+            }
+        }))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_wasm_module_not_found() {
+        let inputs = HashMap::new();
+        let result = run_wasm_step("test", "nonexistent.wasm", None, &inputs);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("WASM module file not found"));
+    }
+}
