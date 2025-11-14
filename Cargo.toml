@@ -20,6 +20,11 @@ wasmtime-wasi = { version = "26.0", optional = true }
 chrono = { version = "0.4", features = ["serde"] }
 serde = { version = "1.0", features = ["derive"] }
 
+# Configuration management
+config = { version = "0.15.0", default-features = false, features = ["toml", "json", "yaml"], optional = true }
+toml = { version = "0.8", optional = true }
+dotenvy = { version = "0.15", optional = true }
+
 # Leptos dependencies for web UI
 leptos = { version = "0.6", features = ["csr", "nightly"], optional = true }
 leptos_meta = { version = "0.6", features = ["csr"], optional = true }
@@ -36,9 +41,9 @@ tower-http = { version = "0.6", features = ["fs"], optional = true }
 
 [features]
 default = ["cli"]
-cli = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi"]
+cli = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "config", "toml", "dotenvy"]
 web-ui = ["leptos", "leptos_meta", "leptos_router", "console_error_panic_hook", "wasm-bindgen", "gloo-net"]
-web-server = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "axum", "tokio", "tower", "tower-http"]
+web-server = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "axum", "tokio", "tower", "tower-http", "config", "toml", "dotenvy"]
 
 [[bin]]
 name = "hybrid-workflow-engine"

@@ -1,27 +1,38 @@
 mod core;
 mod runners;
+mod config;
 
 use core::run_workflow;
+use config::AppConfig;
 use std::env;
 use std::path::Path;
 use std::fs;
 
 fn main() -> anyhow::Result<()> {
+    // Load configuration
+    let config = AppConfig::load()?;
+    
+    println!("Loaded configuration:");
+    println!("  Workflow directory: {}", config.workflows.directory.display());
+    println!("  Server: {}:{}", config.server.host, config.server.port);
+    println!("  Log level: {}", config.logging.level);
+    println!();
+    
     let args: Vec<String> = env::args().collect();
     
     if args.len() > 1 {
         // User provided a workflow file argument
         let workflow_filename = &args[1];
-        let full_path = resolve_workflow_path(workflow_filename);
+        let full_path = resolve_workflow_path(workflow_filename, &config);
         
         println!("=== Running workflow: {} ===", workflow_filename);
         run_workflow(&full_path)?;
     } else {
         // Default behavior: run all workflows found in the workflows directory
-        let workflow_files = discover_workflow_files("workflows")?;
+        let workflow_files = discover_workflow_files(&config.workflows.directory.to_string_lossy(), &config)?;
         
         if workflow_files.is_empty() {
-            println!("No workflow files found in workflows directory");
+            println!("No workflow files found in {} directory", config.workflows.directory.display());
             return Ok(());
         }
         
@@ -57,15 +68,17 @@ fn main() -> anyhow::Result<()> {
 }
 
 /// Resolves workflow path to always look in workflows/ folder or subfolders
-fn resolve_workflow_path(path: &str) -> String {
+fn resolve_workflow_path(path: &str, config: &AppConfig) -> String {
+    let workflow_dir = config.workflows.directory.to_string_lossy();
+    
     // If path already starts with workflows/, use as-is
-    if path.starts_with("workflows/") {
+    if path.starts_with(&workflow_dir.to_string()) {
         return path.to_string();
     }
     
     // If it's just a filename or relative path, prepend workflows/
     if !path.contains('/') || !Path::new(path).exists() {
-        let workflow_path = format!("workflows/{}", path);
+        let workflow_path = format!("{}/{}", workflow_dir, path);
         
         // Check if the file exists in workflows/
         if Path::new(&workflow_path).exists() {
@@ -75,7 +88,7 @@ fn resolve_workflow_path(path: &str) -> String {
         // Also check common subfolders
         let subfolders = ["examples", "templates", "tests"];
         for subfolder in &subfolders {
-            let subfolder_path = format!("workflows/{}/{}", subfolder, path);
+            let subfolder_path = format!("{}/{}/{}", workflow_dir, subfolder, path);
             if Path::new(&subfolder_path).exists() {
                 return subfolder_path;
             }
@@ -90,7 +103,7 @@ fn resolve_workflow_path(path: &str) -> String {
 }
 
 /// Discovers all workflow files in the specified directory
-fn discover_workflow_files(dir: &str) -> anyhow::Result<Vec<String>> {
+fn discover_workflow_files(dir: &str, config: &AppConfig) -> anyhow::Result<Vec<String>> {
     let mut workflow_files = Vec::new();
     
     if !Path::new(dir).exists() {
@@ -98,6 +111,7 @@ fn discover_workflow_files(dir: &str) -> anyhow::Result<Vec<String>> {
     }
     
     let entries = fs::read_dir(dir)?;
+    let max_workflows = config.workflows.max_workflows;
     
     for entry in entries {
         let entry = entry?;
@@ -105,11 +119,18 @@ fn discover_workflow_files(dir: &str) -> anyhow::Result<Vec<String>> {
         
         if path.is_file() {
             if let Some(extension) = path.extension() {
-                if extension == "lua" {
+                // Check if extension is in configured list
+                let ext_str = extension.to_string_lossy();
+                if config.workflows.extensions.iter().any(|e| e == &ext_str.to_string()) {
                     if let Some(path_str) = path.to_str() {
                         // Skip temporary test files
                         if !path_str.contains("test_temp_") {
                             workflow_files.push(path_str.to_string());
+                            
+                            // Respect max_workflows limit
+                            if workflow_files.len() >= max_workflows {
+                                break;
+                            }
                         }
                     }
                 }
@@ -172,11 +193,13 @@ fn get_workflow_info(workflow_path: &str) -> anyhow::Result<WorkflowInfo> {
 mod tests {
     use crate::core::run_workflow;
     use crate::{discover_workflow_files, get_workflow_info};
+    use crate::config::AppConfig;
     use std::fs;
 
     #[test]
     fn test_all_existing_workflows() {
-        let workflow_files = discover_workflow_files("workflows")
+        let config = AppConfig::default();
+        let workflow_files = discover_workflow_files("workflows", &config)
             .expect("Should be able to discover workflow files");
         
         assert!(!workflow_files.is_empty(), "Should find at least one workflow file");

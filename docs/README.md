@@ -4,6 +4,15 @@ Welcome to the documentation directory! Here you'll find comprehensive guides fo
 
 ## 🗂️ Documentation Index
 
+### Configuration Documentation
+
+- **[CONFIGURATION.md](CONFIGURATION.md)** - Configuration management guide
+  - External config files (TOML/JSON/YAML)
+  - Environment variables
+  - Configuration precedence
+  - All available settings
+  - Usage examples and best practices
+
 ### Web UI Documentation
 
 - **[WEB_UI.md](WEB_UI.md)** - Complete Web UI documentation
@@ -33,6 +42,18 @@ Welcome to the documentation directory! Here you'll find comprehensive guides fo
   - Test organization
   - Running Rust tests
   - Test coverage
+
+### WASI Documentation
+
+- **[WASI.md](WASI.md)** - WebAssembly System Interface implementation guide
+  - What is WASI and its capabilities
+  - Implementation steps and examples
+  - Security model and best practices
+
+- **[WASI_IMPLEMENTATION_SUMMARY.md](WASI_IMPLEMENTATION_SUMMARY.md)** - WASI implementation summary
+  - Quick start guide
+  - Dependencies and file locations
+  - Resources and next steps
 
 ## 🚀 Quick Links
 

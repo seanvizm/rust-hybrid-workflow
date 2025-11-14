@@ -8,7 +8,7 @@
 
 ### ✅ Documentation Created
 - **`docs/WASI.md`**: Comprehensive WASI implementation guide
-- **`examples/wasi_workflow.lua`**: Example WASI workflow
+- **`examples/wasi_workflow.lua`**: Example WASI workflow (moved from workflows/)
 - **`wasm_modules/WASI_README.md`**: Guide for building WASI modules
 
 ### ✅ Example Implementation
@@ -193,9 +193,9 @@ See `docs/WASI.md` for comprehensive documentation, examples, and troubleshootin
 
 ## Additional Resources
 
-- **Full Documentation**: [`docs/WASI.md`](docs/WASI.md) - Complete WASI implementation guide
-- **Example Workflow**: [`examples/wasi_workflow.lua`](examples/wasi_workflow.lua) - WASI workflow demonstration
-- **Module Building**: [`wasm_modules/WASI_README.md`](wasm_modules/WASI_README.md) - Guide for building WASI modules
-- **Main README**: [`README.md`](README.md) - Project overview with WASI mentions
+- **Full Documentation**: [`docs/WASI.md`](WASI.md) - Complete WASI implementation guide
+- **Example Workflow**: [`examples/wasi_workflow.lua`](../examples/wasi_workflow.lua) - WASI workflow demonstration
+- **Module Building**: [`wasm_modules/WASI_README.md`](../wasm_modules/WASI_README.md) - Guide for building WASI modules
+- **Main README**: [`README.md`](../README.md) - Project overview with WASI mentions
 
 **That's it!** Your workflow engine has WASI support ready to enable. 🎉

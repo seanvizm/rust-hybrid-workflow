@@ -39,6 +39,7 @@ Perfect for:
 
 - 🔀 **Multi-Language Support**: Execute Python, JavaScript/Node.js, WebAssembly, Lua, and Shell scripts seamlessly
 - 🌐 **WASI Support**: WebAssembly System Interface for secure system resource access
+- ⚙️ **Configuration Management**: External config files (TOML/JSON/YAML) and environment variables
 - 📊 **Dependency Management**: Automatic topological sorting of workflow steps
 - 🔄 **Data Flow**: Pass results between steps across different languages
 - 🚀 **High Performance**: Built in Rust for speed and memory safety
@@ -379,7 +380,7 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 - [x] **WebAssembly Support** - ✅ Execute WASM modules with Wasmtime runtime integration
 
 ### Phase 2: Advanced Features (v0.2.0)
-- [ ] **Configuration Management** - External config files and environment variables
+- [x] **Configuration Management** - ✅ External config files (TOML/JSON/YAML) and environment variables
 - [ ] **Improved Error Reporting** - Better error messages with line numbers and context
 - [ ] **Parallel Execution** - Execute independent steps concurrently (currently sequential)
 - [x] **REST API Interface** - ✅ HTTP API for remote workflow execution with Axum backend

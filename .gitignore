@@ -13,6 +13,14 @@ target
 # Contains mutation testing data
 **/mutants.out*/
 
+# Configuration files (may contain sensitive data)
+# Keep the .example files but ignore actual config files
+.env
+config.toml
+config.json
+config.yaml
+config.yml
+
 # RustRover
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

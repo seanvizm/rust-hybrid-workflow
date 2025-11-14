@@ -1,0 +1,60 @@
+# Hybrid Workflow Engine Configuration Example
+# Copy this file to config.toml and customize as needed
+
+[workflows]
+# Directory to search for workflow files
+directory = "workflows"
+
+# File extensions to consider as workflows
+extensions = ["lua"]
+
+# Maximum number of workflows to load
+max_workflows = 100
+
+[server]
+# Server host address
+host = "127.0.0.1"
+
+# Server port
+port = 3030
+
+# Static files directory for web UI
+static_dir = "pkg"
+
+[runners.python]
+# Python interpreter path
+interpreter = "python3"
+
+# Enable Python runner
+enabled = true
+
+[runners.javascript]
+# Node.js interpreter path
+interpreter = "node"
+
+# Enable JavaScript runner
+enabled = true
+
+[runners.shell]
+# Shell interpreter path (sh, bash, zsh, etc.)
+interpreter = "sh"
+
+# Enable shell runner
+enabled = true
+
+[runners.wasm]
+# WASM modules directory
+modules_dir = "wasm_modules/target/wasm32-unknown-unknown/release"
+
+# Enable WASI support (requires compiled WASI modules)
+wasi_enabled = false
+
+# Enable WASM runner
+enabled = true
+
+[logging]
+# Log level: trace, debug, info, warn, error
+level = "info"
+
+# Enable colored output
+colored = true
