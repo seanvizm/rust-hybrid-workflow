@@ -43,7 +43,7 @@ pub fn WorkflowList() -> impl IntoView {
             <div class="page-header">
                 <div class="header-content">
                     <div>
-                        <h2>"📋 Available Workflows"</h2>
+                        <h2>"Available Workflows"</h2>
                         <p>"Select a workflow to run and view its execution steps"</p>
                     </div>
                     <div class="view-toggle">
@@ -122,6 +122,21 @@ pub fn WorkflowList() -> impl IntoView {
     }
 }
 
+/// Format workflow name for display: replace underscores with spaces and capitalize each word
+fn format_display_name(name: &str) -> String {
+    name.replace('_', " ")
+        .split_whitespace()
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().chain(chars).collect(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 #[component]
 fn WorkflowTable(workflows: ReadSignal<Vec<WorkflowInfo>>) -> impl IntoView {
     view! {
@@ -143,20 +158,26 @@ fn WorkflowTable(workflows: ReadSignal<Vec<WorkflowInfo>>) -> impl IntoView {
                         children=move |workflow: WorkflowInfo| {
                             let name = workflow.name.clone();
                             let navigate_url = format!("/workflow/{}", name);
+                            let formatted_name = format_display_name(&workflow.display_name);
+                            let description = workflow
+                                .description
+                                .clone()
+                                .unwrap_or_else(|| "No description available".to_string());
                             view! {
                                 <tr class="workflow-row">
-                                    <td class="workflow-name">{workflow.display_name.clone()}</td>
-                                    <td class="workflow-description">
-                                        {workflow
-                                            .description
-                                            .clone()
-                                            .unwrap_or_else(|| "No description available".to_string())}
+                                    <td class="workflow-name" data-label="Name">
+                                        {formatted_name}
                                     </td>
-                                    <td>
+                                    <td class="workflow-description" data-label="Description">
+                                        {description}
+                                    </td>
+                                    <td data-label="Type">
                                         <span class="workflow-badge-small">"Lua"</span>
                                     </td>
-                                    <td class="workflow-path">{workflow.path.clone()}</td>
-                                    <td>
+                                    <td class="workflow-path" data-label="Path">
+                                        {workflow.path.clone()}
+                                    </td>
+                                    <td data-label="Actions">
                                         <a href=navigate_url class="btn btn-sm btn-primary">
                                             "▶ Run"
                                         </a>
@@ -175,27 +196,25 @@ fn WorkflowTable(workflows: ReadSignal<Vec<WorkflowInfo>>) -> impl IntoView {
 fn WorkflowCard(workflow: WorkflowInfo) -> impl IntoView {
     let name = workflow.name.clone();
     let navigate_url = format!("/workflow/{}", name);
+    let has_description = workflow.description.is_some();
+    let description = workflow.description.clone().unwrap_or_default();
+    let formatted_name = format_display_name(&workflow.display_name);
 
     view! {
         <div class="workflow-card">
             <div class="workflow-card-header">
-                <h3>{workflow.display_name.clone()}</h3>
+                <h3>{formatted_name}</h3>
                 <span class="workflow-badge">"Lua"</span>
             </div>
 
             <div class="workflow-card-body">
                 <Show
-                    when={
-                        let desc = workflow.description.clone();
-                        move || desc.is_some()
-                    }
+                    when=move || has_description
                     fallback=|| {
                         view! { <p class="workflow-description">"No description available"</p> }
                     }
                 >
-                    <p class="workflow-description">
-                        {workflow.description.clone().unwrap_or_default()}
-                    </p>
+                    <p class="workflow-description">{description.clone()}</p>
                 </Show>
 
                 <div class="workflow-meta">

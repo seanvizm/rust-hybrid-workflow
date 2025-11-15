@@ -18,10 +18,12 @@ pub fn App() -> impl IntoView {
 
         <Router>
             <main class="container">
-                <header class="header">
-                    <h1>"🚀 Hybrid Workflow Engine"</h1>
-                    <p class="subtitle">"Multi-language workflow orchestration"</p>
-                </header>
+                            <div class="header">
+                <div class="container">
+                    <h1>"Hybrid Workflow Engine"</h1>
+                    <p class="subtitle">"Multi-language workflow orchestration powered by Rust"</p>
+                </div>
+            </div>
 
                 <Routes>
                     <Route path="/" view=WorkflowList/>

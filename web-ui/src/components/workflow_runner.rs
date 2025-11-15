@@ -2,6 +2,21 @@ use leptos::*;
 use leptos_router::*;
 use serde::{Deserialize, Serialize};
 
+/// Format workflow name for display: replace underscores with spaces and capitalize each word
+fn format_display_name(name: &str) -> String {
+    name.replace('_', " ")
+        .split_whitespace()
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().chain(chars).collect(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub struct WorkflowStep {
     pub step_number: usize,
@@ -30,6 +45,14 @@ pub struct WorkflowExecution {
     pub error: Option<String>,
 }
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct WorkflowInfo {
+    pub name: String,
+    pub display_name: String,
+    pub description: Option<String>,
+    pub path: String,
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum ExecutionStatus {
@@ -47,8 +70,21 @@ pub fn WorkflowRunner() -> impl IntoView {
     };
 
     let (execution, set_execution) = create_signal(None::<WorkflowExecution>);
+    let (workflow_info, set_workflow_info) = create_signal(None::<WorkflowInfo>);
     let (running, set_running) = create_signal(false);
     let (expanded_steps, set_expanded_steps) = create_signal(Vec::<usize>::new());
+
+    // Fetch workflow info on mount
+    create_effect(move |_| {
+        let name = workflow_name();
+        if !name.is_empty() {
+            spawn_local(async move {
+                if let Ok(info) = fetch_workflow_info(&name).await {
+                    set_workflow_info.set(Some(info));
+                }
+            });
+        }
+    });
 
     let run_workflow = move || {
         let name = workflow_name();
@@ -91,7 +127,14 @@ pub fn WorkflowRunner() -> impl IntoView {
                 <a href="/" class="back-link">
                     "← Back to Workflows"
                 </a>
-                <h2>{move || workflow_name()}</h2>
+                <h2>
+                    {move || {
+                        workflow_info
+                            .get()
+                            .map(|info| info.path.clone())
+                            .unwrap_or_else(|| workflow_name())
+                    }}
+                </h2>
             </div>
 
             <div class="workflow-controls">
@@ -320,6 +363,27 @@ async fn execute_workflow(name: &str) -> Result<WorkflowExecution, String> {
             .json::<WorkflowExecution>()
             .await
             .map_err(|e| format!("Failed to parse execution result: {}", e))
+    } else {
+        Err(format!("Server error: {}", response.status()))
+    }
+}
+
+async fn fetch_workflow_info(name: &str) -> Result<WorkflowInfo, String> {
+    let response = gloo_net::http::Request::get("/api/workflows")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch workflows: {}", e))?;
+
+    if response.ok() {
+        let workflows: Vec<WorkflowInfo> = response
+            .json()
+            .await
+            .map_err(|e| format!("Failed to parse workflows: {}", e))?;
+        
+        workflows
+            .into_iter()
+            .find(|w| w.name == name)
+            .ok_or_else(|| format!("Workflow '{}' not found", name))
     } else {
         Err(format!("Server error: {}", response.status()))
     }
