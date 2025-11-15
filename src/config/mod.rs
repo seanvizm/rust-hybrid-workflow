@@ -16,6 +16,9 @@ pub struct AppConfig {
     /// Server configuration for web UI
     pub server: ServerConfig,
     
+    /// Execution configuration for parallel/sequential execution
+    pub execution: ExecutionConfig,
+    
     /// Runner-specific configurations
     pub runners: RunnerConfig,
     
@@ -51,6 +54,21 @@ pub struct ServerConfig {
     /// Static files directory for web UI
     #[serde(default = "default_static_dir")]
     pub static_dir: PathBuf,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionConfig {
+    /// Execution mode: "sequential" or "parallel"
+    #[serde(default = "default_execution_mode")]
+    pub mode: String,
+    
+    /// Maximum number of steps to execute in parallel (0 = auto-detect CPU count)
+    #[serde(default = "default_max_parallel_steps")]
+    pub max_parallel_steps: usize,
+    
+    /// Enable parallel execution for independent steps
+    #[serde(default = "default_true")]
+    pub enable_step_parallelism: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -152,6 +170,21 @@ fn default_static_dir() -> PathBuf {
     PathBuf::from("pkg")
 }
 
+fn default_execution_mode() -> String {
+    "sequential".to_string()
+}
+
+fn default_max_parallel_steps() -> usize {
+    #[cfg(feature = "cli")]
+    {
+        num_cpus::get()
+    }
+    #[cfg(not(feature = "cli"))]
+    {
+        4
+    }
+}
+
 fn default_python_interpreter() -> String {
     "python3".to_string()
 }
@@ -192,6 +225,11 @@ impl Default for AppConfig {
                 host: default_server_host(),
                 port: default_server_port(),
                 static_dir: default_static_dir(),
+            },
+            execution: ExecutionConfig {
+                mode: default_execution_mode(),
+                max_parallel_steps: default_max_parallel_steps(),
+                enable_step_parallelism: default_true(),
             },
             runners: RunnerConfig {
                 python: PythonConfig {
@@ -300,6 +338,19 @@ impl AppConfig {
         }
         if let Ok(val) = env::var("HWFE_STATIC_DIR") {
             self.server.static_dir = PathBuf::from(val);
+        }
+        
+        // Execution configuration
+        if let Ok(val) = env::var("HWFE_EXECUTION_MODE") {
+            self.execution.mode = val;
+        }
+        if let Ok(val) = env::var("HWFE_MAX_PARALLEL_STEPS") {
+            self.execution.max_parallel_steps = val.parse()
+                .context("Invalid HWFE_MAX_PARALLEL_STEPS value")?;
+        }
+        if let Ok(val) = env::var("HWFE_ENABLE_PARALLELISM") {
+            self.execution.enable_step_parallelism = val.parse()
+                .context("Invalid HWFE_ENABLE_PARALLELISM value")?;
         }
         
         // Python configuration

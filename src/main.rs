@@ -3,12 +3,91 @@ mod runners;
 mod config;
 
 use core::run_workflow;
+#[cfg(feature = "cli")]
+use core::run_workflow_parallel;
 use config::AppConfig;
 use std::env;
 use std::path::Path;
 use std::fs;
 
+#[cfg(feature = "cli")]
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    main_impl().await
+}
+
+#[cfg(not(feature = "cli"))]
 fn main() -> anyhow::Result<()> {
+    main_impl()
+}
+
+#[cfg(feature = "cli")]
+async fn main_impl() -> anyhow::Result<()> {
+    // Load configuration
+    let config = AppConfig::load()?;
+    
+    println!("Loaded configuration:");
+    println!("  Workflow directory: {}", config.workflows.directory.display());
+    println!("  Server: {}:{}", config.server.host, config.server.port);
+    println!("  Execution mode: {}", config.execution.mode);
+    if config.execution.mode == "parallel" {
+        println!("  Max parallel steps: {}", config.execution.max_parallel_steps);
+        println!("  Step parallelism: {}", if config.execution.enable_step_parallelism { "enabled" } else { "disabled" });
+    }
+    println!("  Log level: {}", config.logging.level);
+    println!();
+    
+    let args: Vec<String> = env::args().collect();
+    
+    if args.len() > 1 {
+        // User provided a workflow file argument
+        let workflow_filename = &args[1];
+        let full_path = resolve_workflow_path(workflow_filename, &config);
+        
+        println!("=== Running workflow: {} ===", workflow_filename);
+        execute_workflow(&full_path, &config).await?;
+    } else {
+        // Default behavior: run all workflows found in the workflows directory
+        let workflow_files = discover_workflow_files(&config.workflows.directory.to_string_lossy(), &config)?;
+        
+        if workflow_files.is_empty() {
+            println!("No workflow files found in {} directory", config.workflows.directory.display());
+            return Ok(());
+        }
+        
+        println!("Found {} workflow files. Running all workflows...\n", workflow_files.len());
+        
+        for (index, workflow_path) in workflow_files.iter().enumerate() {
+            if index > 0 {
+                println!(); // Add spacing between workflows
+            }
+            
+            let workflow_info = get_workflow_info(workflow_path)?;
+            println!("=== Running workflow {}/{}: {} ===", 
+                index + 1, 
+                workflow_files.len(),
+                workflow_info.display_name
+            );
+            
+            if let Some(description) = workflow_info.description {
+                println!("Description: {}", description);
+            }
+            
+            match execute_workflow(workflow_path, &config).await {
+                Ok(_) => println!("✅ Workflow '{}' completed successfully", workflow_info.name),
+                Err(e) => {
+                    println!("❌ Workflow '{}' failed: {}", workflow_info.name, e);
+                    // Continue with other workflows instead of stopping
+                }
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+#[cfg(not(feature = "cli"))]
+fn main_impl() -> anyhow::Result<()> {
     // Load configuration
     let config = AppConfig::load()?;
     
@@ -65,6 +144,20 @@ fn main() -> anyhow::Result<()> {
     }
     
     Ok(())
+}
+
+/// Execute workflow with mode selected from config
+#[cfg(feature = "cli")]
+async fn execute_workflow(path: &str, config: &AppConfig) -> anyhow::Result<()> {
+    match config.execution.mode.as_str() {
+        "parallel" => {
+            run_workflow_parallel(path, config.execution.max_parallel_steps).await
+        }
+        "sequential" | _ => {
+            // Default to sequential for safety
+            run_workflow(path)
+        }
+    }
 }
 
 /// Resolves workflow path to always look in workflows/ folder or subfolders

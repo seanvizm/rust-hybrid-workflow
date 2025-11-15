@@ -1,4 +1,4 @@
-# 🚀 Rust Hybrid Workflow Engine
+# Rust Hybrid Workflow Engine
 
 A high-performance, multi-language workflow orchestration engine built in Rust that seamlessly executes Python, JavaScript/Node.js, WebAssembly, Lua, and Shell scripts in complex dependency graphs.
 
@@ -9,7 +9,7 @@ A high-performance, multi-language workflow orchestration engine built in Rust t
 [![WebAssembly](https://img.shields.io/badge/webassembly-1.0-purple.svg)](https://webassembly.org)
 [![Lua](https://img.shields.io/badge/lua-5.4-blue.svg)](https://www.lua.org)
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Key Features](#key-features)
@@ -25,7 +25,7 @@ A high-performance, multi-language workflow orchestration engine built in Rust t
 - [Contributing](#contributing)
 - [License](#license)
 
-## 🌟 Overview
+## Overview
 
 The Rust Hybrid Workflow Engine is a powerful orchestration tool that allows you to define complex multi-step workflows using Lua configuration files. Each step in your workflow can be executed in different programming languages (Python, JavaScript/Node.js, WebAssembly, Lua, Shell), with automatic dependency resolution and data passing between steps.
 
@@ -35,22 +35,23 @@ Perfect for:
 - **Multi-Language Projects**: Leverage the best of each language in a single workflow
 - **Complex Orchestration**: Handle intricate dependency graphs with automatic topological sorting
 
-## ✨ Key Features
+## Key Features
 
-- 🔀 **Multi-Language Support**: Execute Python, JavaScript/Node.js, WebAssembly, Lua, and Shell scripts seamlessly
-- 🌐 **WASI Support**: WebAssembly System Interface for secure system resource access
-- ⚙️ **Configuration Management**: External config files (TOML/JSON/YAML) and environment variables
-- 📊 **Dependency Management**: Automatic topological sorting of workflow steps
-- 🔄 **Data Flow**: Pass results between steps across different languages
-- 🚀 **High Performance**: Built in Rust for speed and memory safety
-- 📝 **Declarative Configuration**: Define workflows using intuitive Lua syntax
-- 🌐 **Web UI**: Interactive Leptos-based interface with real-time execution visualization and hot reload
-- 🔌 **REST API**: HTTP endpoints for remote workflow execution and management
-- 🧪 **Comprehensive Testing**: Built-in test suite with validation tools
-- 🔧 **Error Handling**: Robust error reporting and recovery mechanisms
-- 📦 **Easy Integration**: Command-line interface, library usage, and web interface
+- **Multi-Language Support**: Execute Python, JavaScript/Node.js, WebAssembly, Lua, and Shell scripts seamlessly
+- **WASI Support**: WebAssembly System Interface for secure system resource access
+- **Parallel Execution**: Run independent workflow steps concurrently for improved performance
+- **Configuration Management**: External config files (TOML/JSON/YAML) and environment variables
+- **Dependency Management**: Automatic topological sorting of workflow steps
+- **Data Flow**: Pass results between steps across different languages
+- **High Performance**: Built in Rust for speed and memory safety
+- **Declarative Configuration**: Define workflows using intuitive Lua syntax
+- **Web UI**: Interactive Leptos-based interface with real-time execution visualization and hot reload
+- **REST API**: HTTP endpoints for remote workflow execution and management
+- **Comprehensive Testing**: Built-in test suite with validation tools
+- **Error Handling**: Robust error reporting and recovery mechanisms
+- **Easy Integration**: Command-line interface, library usage, and web interface
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Core Technologies
 - **[Rust](https://www.rust-lang.org/)** (Edition 2024) - Core engine and orchestration
@@ -76,26 +77,26 @@ Perfect for:
 - **[tempfile](https://crates.io/crates/tempfile)** (3.0) - Temporary file management
 - **[chrono](https://crates.io/crates/chrono)** (0.4) - Date and time handling
 
-## 🎯 Rust Edition 2024 Ready
+## Rust Edition 2024 Ready
 
 This project is built with **Rust Edition 2024**, leveraging the latest language features and improvements for enhanced performance and developer experience.
 
-### 🚀 Edition 2024 Benefits
+### Edition 2024 Benefits
 
 **Performance Enhancements:**
-- ⚡ **Advanced Compiler Optimizations** - Improved code generation and smaller binary sizes
-- 🔋 **Enhanced Async Runtime** - Better async/await performance and reduced overhead
-- 🎯 **Smart Memory Management** - More efficient memory allocation patterns
+- **Advanced Compiler Optimizations** - Improved code generation and smaller binary sizes
+- **Enhanced Async Runtime** - Better async/await performance and reduced overhead
+- **Smart Memory Management** - More efficient memory allocation patterns
 
 **Developer Experience:**
-- 🛠️ **Improved Error Messages** - Clearer diagnostics with actionable suggestions
-- 🔍 **Enhanced Pattern Matching** - More expressive `match` arms and `let-else` patterns
-- 📝 **Better Type Inference** - Reduced need for explicit type annotations
+- **Improved Error Messages** - Clearer diagnostics with actionable suggestions
+- **Enhanced Pattern Matching** - More expressive `match` arms and `let-else` patterns
+- **Better Type Inference** - Reduced need for explicit type annotations
 
 **Language Features:**
-- 🔄 **Advanced Macro System** - More powerful procedural macros for code generation
-- 🧩 **Refined Lifetime Management** - Simplified lifetime annotations and better ergonomics
-- 🌟 **Future-Ready Syntax** - Latest language idioms and best practices
+- **Advanced Macro System** - More powerful procedural macros for code generation
+- **Refined Lifetime Management** - Simplified lifetime annotations and better ergonomics
+- **Future-Ready Syntax** - Latest language idioms and best practices
 
 **Why This Matters for Workflow Engine:**
 - **Reliability**: Latest safety improvements reduce runtime errors
@@ -103,9 +104,9 @@ This project is built with **Rust Edition 2024**, leveraging the latest language
 - **Maintainability**: Modern syntax makes the codebase easier to extend
 - **Compatibility**: Forward-compatible with future Rust developments
 
-> 💡 **Pro Tip**: All dependencies are verified compatible with Edition 2024, ensuring a stable and modern development experience.
+> **Pro Tip**: All dependencies are verified compatible with Edition 2024, ensuring a stable and modern development experience.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Rust (Edition 2024 or later) with `wasm32-unknown-unknown` target
@@ -156,20 +157,20 @@ Then open your browser:
 - **Development**: http://localhost:8080
 
 Features:
-- 📋 Browse all workflows in a visual grid
-- ▶️ One-click workflow execution
-- 📊 Real-time step-by-step results with smart output formatting
-- 🎨 Automatic output type detection and rendering:
+- Browse all workflows in a visual grid
+- One-click workflow execution
+- Real-time step-by-step results with smart output formatting
+- Automatic output type detection and rendering:
   - **JSON**: Prettified with syntax highlighting and dark theme
   - **HTML**: Rendered directly (e.g., `<b>bold</b>` displays as **bold**)
   - **Text**: Monospaced display with scrollable container
-- 🔄 Hot reload during development
-- 📱 Responsive mobile-friendly design
-- 🎯 Format badges showing output type (JSON/Text/HTML)
+- Hot reload during development
+- Responsive mobile-friendly design
+- Format badges showing output type (JSON/Text/HTML)
 
 See [docs/WEB_UI.md](docs/WEB_UI.md) for complete documentation.
 
-## 💡 Usage
+## Usage
 
 ### Basic Workflow Structure
 
@@ -258,7 +259,7 @@ cargo run your_workflow.lua
 # So you don't need to specify "workflows/" in the command
 ```
 
-## 📚 Workflow Examples
+## Workflow Examples
 
 The project includes several example workflows:
 
@@ -318,7 +319,7 @@ Complex multi-language pipeline demonstrating core features:
 -- Full dependency graph with cross-language data flow
 ```
 
-## 🏗 Architecture
+## Architecture
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
@@ -344,7 +345,7 @@ Complex multi-language pipeline demonstrating core features:
   - `lua_runner.rs` - Lua script execution with MLua
   - `shell_runner.rs` - Shell command execution
 
-## 🧪 Testing
+## Testing
 
 The project includes comprehensive testing tools:
 
@@ -369,7 +370,7 @@ cargo test
 
 See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 
-## 🗺 Roadmap
+## Roadmap
 
 ### Phase 1: Core Components (v0.1.0)
 - [x] **Main Hybrid Workflow Engine** - ✅ Main orchestration logic and workflow execution
@@ -381,8 +382,8 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 
 ### Phase 2: Advanced Features (v0.2.0)
 - [x] **Configuration Management** - ✅ External config files (TOML/JSON/YAML) and environment variables
+- [x] **Parallel Execution** - ✅ Execute independent steps concurrently with configurable concurrency limits
 - [ ] **Improved Error Reporting** - Better error messages with line numbers and context
-- [ ] **Parallel Execution** - Execute independent steps concurrently (currently sequential)
 - [x] **REST API Interface** - ✅ HTTP API for remote workflow execution with Axum backend
 - [x] **Web UI** - ✅ Interactive Leptos-based web interface for workflow management
   - ✅ Workflow list view with one-click execution
@@ -418,7 +419,7 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 - [ ] **Message Queue Integration** - RabbitMQ, Kafka, Redis support
 - [ ] **GraphQL Interface** - Modern API with real-time subscriptions
 
-## 🔮 Future Improvements
+## Future Improvements
 
 ### Performance Optimizations
 - **Memory Pool Management** - Reduce allocation overhead
@@ -438,7 +439,7 @@ See [`docs/TESTING.md`](docs/TESTING.md) for detailed testing documentation.
 - **Authentication & Authorization** - RBAC and security features
 - **Workflow Marketplace** - Community-driven workflow sharing
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Here's how you can help:
 
@@ -452,11 +453,11 @@ We welcome contributions! Here's how you can help:
 7. Open a Pull Request
 
 ### Contribution Areas
-- 🐛 **Bug Fixes** - Help us squash bugs and improve stability
-- 🚀 **New Features** - Implement items from our roadmap
-- 📚 **Documentation** - Improve docs, examples, and tutorials
-- 🧪 **Testing** - Add test cases and improve coverage
-- 🎨 **Examples** - Create new workflow examples and use cases
+- **Bug Fixes** - Help us squash bugs and improve stability
+- **New Features** - Implement items from our roadmap
+- **Documentation** - Improve docs, examples, and tutorials
+- **Testing** - Add test cases and improve coverage
+- **Examples** - Create new workflow examples and use cases
 
 ### Code Style
 - Follow Rust conventions and use `cargo fmt`
@@ -464,11 +465,11 @@ We welcome contributions! Here's how you can help:
 - Update documentation for API changes
 - Use descriptive commit messages
 
-## 📜 License
+## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Rust Community** - For the amazing ecosystem and tools
 - **MLua & PyO3 Teams** - For excellent language binding libraries

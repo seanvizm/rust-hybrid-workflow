@@ -21,6 +21,21 @@ port = 3030
 # Static files directory for web UI
 static_dir = "pkg"
 
+[execution]
+# Execution mode: "sequential" (default) or "parallel"
+# - sequential: Execute steps one at a time in dependency order (safest)
+# - parallel: Execute independent steps concurrently for better performance
+mode = "sequential"
+
+# Maximum number of steps to execute in parallel (defaults to CPU count)
+# Only applies when mode = "parallel"
+# Set to 0 to use CPU count automatically
+max_parallel_steps = 4
+
+# Enable step-level parallelism (future feature)
+# When enabled, steps can spawn multiple parallel operations
+enable_step_parallelism = false
+
 [runners.python]
 # Python interpreter path
 interpreter = "python3"

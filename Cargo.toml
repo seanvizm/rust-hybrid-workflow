@@ -39,11 +39,15 @@ tokio = { version = "1", features = ["full"], optional = true }
 tower = { version = "0.5", optional = true }
 tower-http = { version = "0.6", features = ["fs"], optional = true }
 
+# For parallel execution
+futures = { version = "0.3", optional = true }
+num_cpus = { version = "1.0", optional = true }
+
 [features]
 default = ["cli"]
-cli = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "config", "toml", "dotenvy"]
+cli = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "config", "toml", "dotenvy", "tokio", "futures", "num_cpus"]
 web-ui = ["leptos", "leptos_meta", "leptos_router", "console_error_panic_hook", "wasm-bindgen", "gloo-net"]
-web-server = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "axum", "tokio", "tower", "tower-http", "config", "toml", "dotenvy"]
+web-server = ["mlua", "pyo3", "tempfile", "wasmtime", "wasmtime-wasi", "axum", "tokio", "tower", "tower-http", "config", "toml", "dotenvy", "futures", "num_cpus"]
 
 [[bin]]
 name = "hybrid-workflow-engine"

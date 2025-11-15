@@ -1,6 +1,6 @@
 use mlua::{Lua, Table};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Step {
     pub name: String,
     pub language: String,
